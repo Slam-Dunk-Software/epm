@@ -36,7 +36,8 @@ fn epm_adopt(registry: &str, project: &TempDir, spec: &str) -> assert_cmd::asser
     Command::cargo_bin("epm")
         .unwrap()
         .current_dir(project.path())
-        .args(["--registry", registry, "adopt", spec])
+        .args(["adopt", spec])
+        .env("EPM_REGISTRY", registry)
         .assert()
 }
 

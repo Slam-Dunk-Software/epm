@@ -5,7 +5,7 @@ use tempfile::TempDir;
 fn epm_list(home: &TempDir) -> assert_cmd::assert::Assert {
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", "http://localhost:19999", "list"])
+        .args(["list"])
         .env("HOME", home.path())
         .assert()
 }

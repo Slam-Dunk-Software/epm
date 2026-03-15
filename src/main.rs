@@ -99,7 +99,8 @@ async fn main() -> Result<()> {
     let token = cli.token
         .clone()
         .or_else(|| std::env::var("EPM_PUBLISH_TOKEN").ok());
-    let client = RegistryClient::new(REGISTRY, token);
+    let registry = std::env::var("EPM_REGISTRY").unwrap_or_else(|_| REGISTRY.to_string());
+    let client = RegistryClient::new(&registry, token);
 
     match &cli.command {
         Commands::Search { query } => {

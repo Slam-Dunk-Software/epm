@@ -18,7 +18,7 @@ async fn mock_packages(packages: serde_json::Value) -> MockServer {
 
 fn epm(registry: &str) -> Command {
     let mut cmd = Command::cargo_bin("epm").unwrap();
-    cmd.arg("--registry").arg(registry);
+    cmd.env("EPM_REGISTRY", registry);
     cmd
 }
 
@@ -147,7 +147,8 @@ async fn search_registry_unreachable_exits_nonzero() {
     // Port 59876: nothing should be listening there
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", "http://127.0.0.1:59876", "search"])
+        .args(["search"])
+        .env("EPM_REGISTRY", "http://127.0.0.1:59876")
         .assert()
         .failure();
 }

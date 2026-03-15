@@ -58,7 +58,8 @@ async fn publish_exits_zero_on_success() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .success();
@@ -76,7 +77,8 @@ async fn publish_prints_name_at_version() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .success()
@@ -97,7 +99,8 @@ async fn publish_sends_correct_commit_sha() {
 
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .success();
@@ -120,7 +123,8 @@ async fn publish_sends_manifest_name_and_version() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .success();
@@ -139,7 +143,8 @@ async fn publish_fails_without_eps_toml() {
     let repo = common::TestRepo::create(); // no eps.toml
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .failure()
@@ -154,7 +159,8 @@ async fn publish_fails_with_malformed_toml() {
     let repo = common::TestRepo::create_with_manifest(bad_manifest);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .failure();
@@ -172,7 +178,8 @@ async fn publish_409_shows_already_exists_in_stderr() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .failure()
@@ -184,7 +191,8 @@ async fn publish_registry_unreachable_exits_nonzero() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", "http://127.0.0.1:59876", "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", "http://127.0.0.1:59876")
         .current_dir(repo._dir.path())
         .assert()
         .failure();
@@ -202,7 +210,8 @@ async fn publish_sends_system_deps() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST_WITH_SYSTEM_DEPS);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .success();
@@ -226,7 +235,8 @@ async fn publish_401_shows_unauthorized_error() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .failure()
@@ -246,7 +256,8 @@ async fn publish_token_flag_sends_authorization_header() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "--token", "mytoken", "publish"])
+        .args(["--token", "mytoken", "publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .current_dir(repo._dir.path())
         .assert()
         .success();
@@ -268,7 +279,8 @@ async fn publish_token_env_var_sends_authorization_header() {
     let repo = common::TestRepo::create_with_manifest(MANIFEST);
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "publish"])
+        .args(["publish"])
+        .env("EPM_REGISTRY", &server.uri())
         .env("EPM_PUBLISH_TOKEN", "envtoken")
         .current_dir(repo._dir.path())
         .assert()

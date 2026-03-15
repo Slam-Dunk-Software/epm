@@ -12,7 +12,8 @@ const PKG: &str = "tech_talker";
 fn epm_upgrade(registry: &str, home: &TempDir, name: &str) -> assert_cmd::assert::Assert {
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", registry, "upgrade", name])
+        .args(["upgrade", name])
+        .env("EPM_REGISTRY", registry)
         .env("HOME", home.path())
         .assert()
 }

@@ -47,7 +47,8 @@ async fn setup_server(pkg: serde_json::Value) -> MockServer {
 
 fn epm_info(registry: &str) -> Command {
     let mut cmd = Command::cargo_bin("epm").unwrap();
-    cmd.args(["--registry", registry, "info", "tech_talker"]);
+    cmd.args(["info", "tech_talker"]);
+    cmd.env("EPM_REGISTRY", registry);
     cmd
 }
 
@@ -203,7 +204,8 @@ async fn info_package_not_found_exits_nonzero() {
 
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "info", "tech_talker"])
+        .args(["info", "tech_talker"])
+        .env("EPM_REGISTRY", &server.uri())
         .assert()
         .failure();
 }
@@ -219,7 +221,8 @@ async fn info_package_not_found_shows_error_in_stderr() {
 
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", &server.uri(), "info", "tech_talker"])
+        .args(["info", "tech_talker"])
+        .env("EPM_REGISTRY", &server.uri())
         .assert()
         .failure()
         .stderr(predicate::str::contains("not found").or(predicate::str::contains("tech_talker")));

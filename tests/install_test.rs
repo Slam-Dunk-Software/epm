@@ -29,7 +29,8 @@ fn install_path(home: &TempDir) -> std::path::PathBuf {
 fn epm_install(registry: &str, home: &TempDir, spec: &str) -> assert_cmd::assert::Assert {
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", registry, "install", spec])
+        .args(["install", spec])
+        .env("EPM_REGISTRY", registry)
         .env("HOME", home.path())
         .assert()
 }

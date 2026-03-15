@@ -36,7 +36,8 @@ fn epm_adopt(registry: &str, project: &TempDir) -> assert_cmd::assert::Assert {
     Command::cargo_bin("epm")
         .unwrap()
         .current_dir(project.path())
-        .args(["--registry", registry, "adopt", PKG])
+        .args(["adopt", PKG])
+        .env("EPM_REGISTRY", registry)
         .assert()
 }
 
@@ -44,7 +45,8 @@ fn epm_sync(registry: &str, project: &TempDir) -> assert_cmd::assert::Assert {
     Command::cargo_bin("epm")
         .unwrap()
         .current_dir(project.path())
-        .args(["--registry", registry, "sync", PKG])
+        .args(["sync", PKG])
+        .env("EPM_REGISTRY", registry)
         .assert()
 }
 
@@ -52,7 +54,8 @@ fn epm_sync_wipe(registry: &str, project: &TempDir) -> assert_cmd::assert::Asser
     Command::cargo_bin("epm")
         .unwrap()
         .current_dir(project.path())
-        .args(["--registry", registry, "sync", PKG, "--wipe"])
+        .args(["sync", PKG, "--wipe"])
+        .env("EPM_REGISTRY", registry)
         .assert()
 }
 
@@ -184,7 +187,8 @@ async fn sync_fails_if_not_adopted() {
     Command::cargo_bin("epm")
         .unwrap()
         .current_dir(project.path())
-        .args(["--registry", &server.uri(), "sync", PKG])
+        .args(["sync", PKG])
+        .env("EPM_REGISTRY", &server.uri())
         .assert()
         .failure()
         .stderr(
@@ -204,7 +208,8 @@ async fn sync_fails_if_adopted_toml_missing() {
     Command::cargo_bin("epm")
         .unwrap()
         .current_dir(project.path())
-        .args(["--registry", &server.uri(), "sync", PKG])
+        .args(["sync", PKG])
+        .env("EPM_REGISTRY", &server.uri())
         .assert()
         .failure()
         .stderr(

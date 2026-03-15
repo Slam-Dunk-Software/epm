@@ -5,7 +5,7 @@ use tempfile::TempDir;
 fn epm_uninstall(home: &TempDir, spec: &str) -> assert_cmd::assert::Assert {
     Command::cargo_bin("epm")
         .unwrap()
-        .args(["--registry", "http://localhost:19999", "uninstall", spec])
+        .args(["uninstall", spec])
         .env("HOME", home.path())
         .assert()
 }
