@@ -88,6 +88,13 @@ impl RegistryClient {
             .context("failed to parse publish response")
     }
 
+    /// Fire-and-forget install tracking — never fails the caller.
+    pub async fn track_install(&self, name: &str, version: &str) {
+        let url = format!("{}/api/v1/packages/{name}/installs", self.base_url);
+        let body = serde_json::json!({ "version": version });
+        let _ = self.client.post(&url).json(&body).send().await;
+    }
+
     pub async fn get_version(&self, name: &str, version: &str) -> Result<Version> {
         let url = format!("{}/api/v1/packages/{name}/{version}", self.base_url);
         let resp = self

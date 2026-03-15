@@ -92,6 +92,8 @@ pub async fn install_version(client: &RegistryClient, name: &str, version: &Vers
         install_root.display()
     );
 
+    client.track_install(name, &version.version).await;
+
     Ok(())
 }
 
