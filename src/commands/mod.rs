@@ -1,0 +1,11 @@
+pub mod adopt;
+pub mod info;
+pub mod init;
+pub mod install;
+pub mod list;
+pub mod publish;
+pub mod search;
+pub mod sync;
+pub mod sysdeps;
+pub mod uninstall;
+pub mod upgrade;

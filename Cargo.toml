@@ -1,0 +1,32 @@
+[package]
+name        = "epm"
+version     = "0.1.0"
+edition     = "2021"
+license     = "MIT"
+description = "The CLI for the EPS ecosystem — publish, search, and install personal software packages."
+repository  = "https://github.com/Slam-Dunk-Software/epm"
+
+[[bin]]
+name = "epm"
+path = "src/main.rs"
+
+[dependencies]
+clap       = { version = "4", features = ["derive"] }
+reqwest    = { version = "0.12", features = ["json"] }
+anyhow     = "1"
+dirs       = "5"
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio      = { version = "1", features = ["full"] }
+toml       = "0.8"
+sha2       = "0.10"
+hex        = "0.4"
+semver     = "1"
+
+[dev-dependencies]
+wiremock   = "0.6"
+assert_cmd = "2"
+predicates = "3"
+tempfile   = "3"
+serde_json = "1"
+tokio      = { version = "1", features = ["full"] }
