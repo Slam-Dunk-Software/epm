@@ -9,15 +9,11 @@ use client::RegistryClient;
 use commands::mcp::McpCommands;
 use commands::runtime::RuntimeCommands;
 
-const DEFAULT_REGISTRY: &str = "https://epm.dev";
+const REGISTRY: &str = "https://epm.dev";
 
 #[derive(Parser)]
 #[command(name = "epm", about = "Extremely Personal Manager — EPS registry client")]
 struct Cli {
-    /// Registry base URL
-    #[arg(long, global = true, default_value = DEFAULT_REGISTRY)]
-    registry: String,
-
     /// Publish token (overrides EPM_PUBLISH_TOKEN env var)
     #[arg(long, global = true)]
     token: Option<String>,
@@ -103,7 +99,7 @@ async fn main() -> Result<()> {
     let token = cli.token
         .clone()
         .or_else(|| std::env::var("EPM_PUBLISH_TOKEN").ok());
-    let client = RegistryClient::new(&cli.registry, token);
+    let client = RegistryClient::new(REGISTRY, token);
 
     match &cli.command {
         Commands::Search { query } => {
