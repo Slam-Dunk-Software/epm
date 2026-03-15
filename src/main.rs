@@ -6,6 +6,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use client::RegistryClient;
+use commands::runtime::RuntimeCommands;
 
 const DEFAULT_REGISTRY: &str = "https://epm.dev";
 
@@ -83,6 +84,11 @@ enum Commands {
         #[arg(long)]
         wipe: bool,
     },
+    /// Manage the EPS runtime (epc + observatory)
+    Runtime {
+        #[command(subcommand)]
+        command: RuntimeCommands,
+    },
 }
 
 #[tokio::main]
@@ -123,6 +129,9 @@ async fn main() -> Result<()> {
         }
         Commands::Sync { name, wipe } => {
             commands::sync::run(&client, name, *wipe).await?;
+        }
+        Commands::Runtime { command } => {
+            commands::runtime::run(command, &client).await?;
         }
     }
 

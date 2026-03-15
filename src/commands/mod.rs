@@ -1,4 +1,5 @@
 pub mod adopt;
+pub mod runtime;
 pub mod info;
 pub mod init;
 pub mod install;
