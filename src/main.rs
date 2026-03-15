@@ -6,6 +6,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use client::RegistryClient;
+use commands::mcp::McpCommands;
 use commands::runtime::RuntimeCommands;
 
 const DEFAULT_REGISTRY: &str = "https://epm.dev";
@@ -89,6 +90,11 @@ enum Commands {
         #[command(subcommand)]
         command: RuntimeCommands,
     },
+    /// Install, list, and remove MCP servers in ~/.claude.json
+    Mcp {
+        #[command(subcommand)]
+        command: McpCommands,
+    },
 }
 
 #[tokio::main]
@@ -132,6 +138,9 @@ async fn main() -> Result<()> {
         }
         Commands::Runtime { command } => {
             commands::runtime::run(command, &client).await?;
+        }
+        Commands::Mcp { command } => {
+            commands::mcp::run(command, &client).await?;
         }
     }
 

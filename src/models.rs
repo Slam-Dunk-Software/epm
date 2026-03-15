@@ -14,6 +14,8 @@ pub struct EpsManifest {
     pub system_deps: SystemDeps,
     #[serde(default)]
     pub hooks: EpsHooks,
+    #[serde(default)]
+    pub mcp: EpsMcp,
 }
 
 #[derive(Debug, Deserialize)]
@@ -35,6 +37,19 @@ pub struct EpsHooks {
     pub configure: Option<String>,
     pub update:    Option<String>,
     pub uninstall: Option<String>,
+}
+
+/// Optional `[mcp]` section — present when the package is an MCP server.
+#[derive(Debug, Deserialize, Default)]
+pub struct EpsMcp {
+    /// Name of the compiled binary inside `target/release/`
+    pub binary: Option<String>,
+    /// Optional extra CLI args to pass when registering with the MCP client
+    #[serde(default)]
+    pub args: Vec<String>,
+    /// Optional env vars to set in the MCP client config
+    #[serde(default)]
+    pub env: std::collections::HashMap<String, String>,
 }
 
 /// Sent to POST /api/v1/packages
