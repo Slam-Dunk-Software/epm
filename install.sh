@@ -3,9 +3,17 @@ set -e
 
 # epm installer — downloads a pre-built binary from GitHub Releases
 # Usage: curl -fsSL https://raw.githubusercontent.com/Slam-Dunk-Software/epm/main/install.sh | sh
+# Options: --quiet / -q   skip post-install prompts
 
 REPO="Slam-Dunk-Software/epm"
 INSTALL_DIR="${EPM_INSTALL_DIR:-/usr/local/bin}"
+QUIET=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --quiet|-q) QUIET=1 ;;
+  esac
+done
 
 # Detect OS and architecture
 OS="$(uname -s)"
@@ -67,4 +75,39 @@ chmod +x "$INSTALL_DIR/epm"
 echo ""
 echo "✓ epm $LATEST installed to $INSTALL_DIR/epm"
 echo ""
-echo "Try: epm new <harness>"
+
+# ── post-install setup ────────────────────────────────────────────────────────
+
+if [ "$QUIET" = "1" ]; then
+  echo "Run 'epm new <harness>' to get started."
+  exit 0
+fi
+
+# Read from /dev/tty so prompts work even when piped through curl
+prompt() {
+  printf "%s [Y/n] " "$1"
+  read -r answer </dev/tty
+  case "$answer" in
+    [nN]*) return 1 ;;
+    *)     return 0 ;;
+  esac
+}
+
+echo "Would you like to set up a few extras? (skip any with 'n')"
+echo ""
+
+# MCP server
+if prompt "  Install eps_mcp (MCP knowledge server for Claude Code)?"; then
+  echo ""
+  epm mcp install eps_mcp
+  echo ""
+fi
+
+# Skills
+if prompt "  Install eps_skills (slash commands for Claude Code)?"; then
+  echo ""
+  epm skills install eps_skills
+  echo ""
+fi
+
+echo "All done! Run 'epm new <harness>' to get started."
