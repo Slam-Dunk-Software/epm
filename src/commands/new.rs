@@ -41,9 +41,9 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>) -> Resu
 
     // Clone the harness
     let clone_ok = Command::new("git")
-        .args(["clone", &version.git_url, dest])
+        .args(["clone", "--quiet", &version.git_url, dest])
         .stdout(Stdio::null())
-        .stderr(Stdio::inherit())
+        .stderr(Stdio::null())
         .status()
         .context("failed to run git clone")?
         .success();
@@ -52,11 +52,11 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>) -> Resu
         bail!("git clone failed");
     }
 
-    // Checkout the exact published commit
+    // Checkout the exact published commit (suppress detached HEAD advice)
     let checkout_ok = Command::new("git")
-        .args(["-C", dest, "checkout", &version.commit_sha])
+        .args(["-C", dest, "-c", "advice.detachedHead=false", "checkout", &version.commit_sha])
         .stdout(Stdio::null())
-        .stderr(Stdio::inherit())
+        .stderr(Stdio::null())
         .status()
         .context("failed to run git checkout")?
         .success();
