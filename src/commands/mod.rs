@@ -1,5 +1,6 @@
 pub mod adopt;
 pub mod mcp;
+pub mod new;
 pub mod runtime;
 pub mod info;
 pub mod init;

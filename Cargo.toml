@@ -1,6 +1,6 @@
 [package]
 name        = "epm"
-version     = "0.3.3"
+version     = "0.3.4"
 edition     = "2021"
 license     = "MIT"
 description = "The CLI for the EPS ecosystem — publish, search, and install personal software packages."
@@ -22,6 +22,7 @@ toml       = "0.8"
 sha2       = "0.10"
 hex        = "0.4"
 semver     = "1"
+strsim     = "0.11"
 
 [dev-dependencies]
 wiremock   = "0.6"

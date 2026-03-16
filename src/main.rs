@@ -57,6 +57,13 @@ enum Commands {
         #[arg(long, default_value = "eps.toml")]
         manifest: std::path::PathBuf,
     },
+    /// Create a new project from an EPS harness
+    New {
+        /// Harness name (e.g. todo, crm) — optionally with @version
+        spec: String,
+        /// Directory name to create (defaults to the harness name)
+        dir: Option<String>,
+    },
     /// Scaffold a new EPS package in a new directory
     Init {
         /// Package name (a directory with this name will be created)
@@ -123,6 +130,9 @@ async fn main() -> Result<()> {
         }
         Commands::Publish { manifest } => {
             commands::publish::run(&client, manifest).await?;
+        }
+        Commands::New { spec, dir } => {
+            commands::new::run(&client, spec, dir.as_deref()).await?;
         }
         Commands::Init { name, description, no_git } => {
             commands::init::run(name, description.as_deref(), *no_git)?;
