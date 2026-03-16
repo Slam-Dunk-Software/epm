@@ -4,8 +4,9 @@ use anyhow::{bail, Context, Result};
 
 use crate::client::RegistryClient;
 use crate::commands::install::{check_platform, parse_spec, select_latest_version};
+use crate::models::EpsManifest;
 
-pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>) -> Result<()> {
+pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: bool) -> Result<()> {
     let (name, pinned_version) = parse_spec(spec);
 
     let pkg = match client.get_package(name).await {
@@ -70,6 +71,27 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>) -> Resu
         bail!("git checkout {} failed", version.commit_sha);
     }
 
+    // Block if the package is a maintained tool, not a customizable harness
+    if !force {
+        if let Ok(s) = std::fs::read_to_string(dest_path.join("eps.toml")) {
+            if let Ok(m) = toml::from_str::<EpsManifest>(&s) {
+                if m.eps.package_type.as_deref() == Some("tool") {
+                    std::fs::remove_dir_all(dest_path).ok();
+                    let alt = if m.mcp.binary.is_some() {
+                        format!("epm mcp install {name}")
+                    } else {
+                        format!("epm install {name}")
+                    };
+                    bail!(
+                        "'{name}' is a maintained tool, not a customizable harness.\n\
+                         Use `{alt}` to install it instead.\n\
+                         (Pass --force to scaffold from it anyway.)"
+                    );
+                }
+            }
+        }
+    }
+
     // Strip upstream history — fresh slate
     std::fs::remove_dir_all(dest_path.join(".git"))
         .context("failed to remove upstream .git")?;
@@ -99,8 +121,20 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>) -> Resu
 
     client.track_install(name, &version.version).await;
 
+    // Read the harness's eps.toml to find the start command (best-effort)
+    let start_cmd = std::fs::read_to_string(dest_path.join("eps.toml"))
+        .ok()
+        .and_then(|s| toml::from_str::<EpsManifest>(&s).ok())
+        .and_then(|m| if m.service.enabled { m.service.start } else { None });
+
     println!("\n✓ Ready at ./{dest}/");
-    println!("  cd {dest} && cat CUSTOMIZE.md");
+    if let Some(start) = start_cmd {
+        println!("\n  Run it:");
+        println!("    cd {dest} && {start}");
+        println!("\n  Then read CUSTOMIZE.md to make it yours.");
+    } else {
+        println!("  cd {dest} && cat CUSTOMIZE.md");
+    }
 
     Ok(())
 }

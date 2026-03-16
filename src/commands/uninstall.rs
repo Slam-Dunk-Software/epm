@@ -21,7 +21,10 @@ pub fn run(spec: &str) -> Result<()> {
         match installed.len() {
             0 => bail!("{name} is not installed"),
             1 => installed.remove(0),
-            _ => bail!("multiple versions installed — use `epm uninstall {name}@<version>`"),
+            _ => {
+            let list = installed.join(", ");
+            bail!("multiple versions installed: {list}\nUse `epm uninstall {name}@<version>` to target one.");
+        }
         }
     };
 

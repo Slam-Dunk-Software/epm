@@ -11,7 +11,7 @@ use clap::Subcommand;
 use serde_json::Value;
 
 use crate::client::RegistryClient;
-use crate::commands::{install, list::list_installed_versions};
+use crate::commands::{install, list::list_installed_versions, uninstall};
 
 #[derive(Subcommand)]
 pub enum McpCommands {
@@ -22,7 +22,7 @@ pub enum McpCommands {
     },
     /// List all MCP servers registered in ~/.claude.json
     List,
-    /// Remove an MCP server from ~/.claude.json (does not uninstall the package)
+    /// Unregister an MCP server from ~/.claude.json and uninstall its package
     Remove {
         /// Server name as it appears in ~/.claude.json
         name: String,
@@ -163,6 +163,7 @@ fn run_list() -> Result<()> {
 // ── remove ────────────────────────────────────────────────────────────────────
 
 fn run_remove(name: &str) -> Result<()> {
+    // 1. Remove from ~/.claude.json
     let path = claude_json_path()?;
     if !path.exists() {
         bail!("~/.claude.json not found — nothing to remove");
@@ -185,7 +186,14 @@ fn run_remove(name: &str) -> Result<()> {
     let out = serde_json::to_string_pretty(&root)?;
     std::fs::write(&path, out)?;
 
-    println!("Removed '{name}' from ~/.claude.json.");
+    // 2. Uninstall the package from ~/.epm/packages/ (best-effort)
+    match uninstall::run(name) {
+        Ok(()) => {}
+        Err(e) if e.to_string().contains("not installed") => {}
+        Err(e) => eprintln!("warning: could not uninstall package: {e}"),
+    }
+
+    println!("Removed '{name}'.");
     println!("Restart Claude to apply the change.");
     Ok(())
 }

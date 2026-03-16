@@ -10,12 +10,26 @@ pub type SystemDeps = HashMap<String, Vec<String>>;
 #[derive(Debug, Deserialize)]
 pub struct EpsManifest {
     pub package: EpsPackage,
+    #[serde(default)]
+    pub eps: EpsSection,
     #[serde(default, rename = "system-dependencies")]
     pub system_deps: SystemDeps,
     #[serde(default)]
     pub hooks: EpsHooks,
     #[serde(default)]
+    pub service: EpsService,
+    #[serde(default)]
     pub mcp: EpsMcp,
+}
+
+/// Optional `[eps]` section — marks the repo as an EPS and carries metadata.
+#[derive(Debug, Deserialize, Default)]
+pub struct EpsSection {
+    pub customization_guide: Option<String>,
+    /// `"tool"` = maintained software, not a customizable harness.
+    /// `epm new` blocks on tool packages; use `epm install` or `epm mcp install` instead.
+    #[serde(default, rename = "type")]
+    pub package_type: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -37,6 +51,15 @@ pub struct EpsHooks {
     pub configure: Option<String>,
     pub update:    Option<String>,
     pub uninstall: Option<String>,
+}
+
+/// Optional `[service]` section — present when the package runs as a daemon.
+#[derive(Debug, Deserialize, Default)]
+pub struct EpsService {
+    #[serde(default)]
+    pub enabled: bool,
+    pub start: Option<String>,
+    pub port: Option<u16>,
 }
 
 /// Optional `[mcp]` section — present when the package is an MCP server.

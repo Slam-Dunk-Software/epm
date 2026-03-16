@@ -64,6 +64,9 @@ enum Commands {
         spec: String,
         /// Directory name to create (defaults to the harness name)
         dir: Option<String>,
+        /// Scaffold from a maintained tool package anyway (advanced)
+        #[arg(long)]
+        force: bool,
     },
     /// Scaffold a new EPS package in a new directory
     Init {
@@ -134,8 +137,8 @@ async fn main() -> Result<()> {
         Commands::Publish { manifest } => {
             commands::publish::run(&client, manifest).await?;
         }
-        Commands::New { spec, dir } => {
-            commands::new::run(&client, spec, dir.as_deref()).await?;
+        Commands::New { spec, dir, force } => {
+            commands::new::run(&client, spec, dir.as_deref(), *force).await?;
         }
         Commands::Init { name, description, no_git } => {
             commands::init::run(name, description.as_deref(), *no_git)?;

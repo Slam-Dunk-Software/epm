@@ -55,20 +55,24 @@ pub async fn install_version(client: &RegistryClient, name: &str, version: &Vers
         .context("install path contains non-UTF-8 characters")?;
 
     let clone_status = Command::new("git")
-        .args(["clone", &version.git_url, install_str])
+        .args(["clone", "--quiet", &version.git_url, install_str])
         .stdout(Stdio::null())
-        .stderr(Stdio::inherit())
+        .stderr(Stdio::null())
         .status()
         .context("failed to run git clone")?;
 
     if !clone_status.success() {
-        bail!("git clone failed");
+        bail!(
+            "git clone failed — check your internet connection and try again.\n\
+             If the problem persists, try: git clone {} {}",
+            version.git_url, install_str
+        );
     }
 
     let checkout_status = Command::new("git")
-        .args(["-C", install_str, "checkout", &version.commit_sha])
+        .args(["-C", install_str, "-c", "advice.detachedHead=false", "checkout", &version.commit_sha])
         .stdout(Stdio::null())
-        .stderr(Stdio::inherit())
+        .stderr(Stdio::null())
         .status()
         .context("failed to run git checkout")?;
 
