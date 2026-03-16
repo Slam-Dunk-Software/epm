@@ -1,6 +1,7 @@
 mod client;
 mod commands;
 mod models;
+mod update_check;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -150,6 +151,8 @@ async fn main() -> Result<()> {
             commands::mcp::run(command, &client).await?;
         }
     }
+
+    update_check::check_and_warn().await;
 
     Ok(())
 }
