@@ -37,6 +37,11 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>) -> Resu
         bail!("destination '{}' already exists", dest_path.display());
     }
 
+    // Check git is available before doing anything
+    if Command::new("git").arg("--version").stdout(Stdio::null()).stderr(Stdio::null()).status().is_err() {
+        bail!("git is required but was not found.\nInstall it from https://git-scm.com/downloads and try again.");
+    }
+
     println!("Creating {dest} from {name}@{} ...", version.version);
 
     // Clone the harness
@@ -49,7 +54,7 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>) -> Resu
         .success();
 
     if !clone_ok {
-        bail!("git clone failed");
+        bail!("git clone failed — check your internet connection and try again.\nIf the problem persists, try: git clone {} {}", version.git_url, dest);
     }
 
     // Checkout the exact published commit (suppress detached HEAD advice)
