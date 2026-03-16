@@ -12,7 +12,7 @@ use commands::runtime::RuntimeCommands;
 const REGISTRY: &str = "https://epm.dev";
 
 #[derive(Parser)]
-#[command(name = "epm", about = "Extremely Personal Manager — EPS registry client")]
+#[command(name = "epm", version, about = "Extremely Personal Manager. A package manager for extremely personal software.")]
 struct Cli {
     /// Publish token (overrides EPM_PUBLISH_TOKEN env var)
     #[arg(long, global = true)]
