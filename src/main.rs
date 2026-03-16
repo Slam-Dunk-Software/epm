@@ -99,6 +99,8 @@ enum Commands {
         #[command(subcommand)]
         command: McpCommands,
     },
+    /// Update epm to the latest version
+    SelfUpdate,
 }
 
 #[tokio::main]
@@ -149,6 +151,9 @@ async fn main() -> Result<()> {
         }
         Commands::Mcp { command } => {
             commands::mcp::run(command, &client).await?;
+        }
+        Commands::SelfUpdate => {
+            commands::self_update::run().await?;
         }
     }
 
