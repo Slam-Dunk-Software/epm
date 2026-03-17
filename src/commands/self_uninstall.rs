@@ -15,10 +15,12 @@ pub fn run(yes: bool, keep_binary: bool) -> Result<()> {
     let home = dirs::home_dir().context("could not determine home directory")?;
 
     if !yes {
-        eprintln!("This will remove epm and everything it installed.");
-        eprintln!("Run with --yes to confirm.");
+        eprintln!("\x1b[33mThis will remove epm and everything it installed.\x1b[0m");
+        eprintln!("Run with \x1b[1m--yes\x1b[0m to confirm.");
         std::process::exit(1);
     }
+
+    println!("\x1b[2mUninstalling epm...\x1b[0m");
 
     let manifest = InstalledManifest::load(&home);
 
@@ -71,34 +73,31 @@ pub fn run(yes: bool, keep_binary: bool) -> Result<()> {
     }
 
     // ── print summary ─────────────────────────────────────────────────────────
-    if removed_mcps.is_empty() && removed_skills.is_empty() {
-        println!("Removed ~/.epm/.");
-    } else {
-        if !removed_mcps.is_empty() {
-            println!("Removed MCP server{}:", if removed_mcps.len() == 1 { "" } else { "s" });
-            for name in &removed_mcps {
-                println!("  {name}");
-            }
+    println!();
+    if !removed_mcps.is_empty() {
+        for name in &removed_mcps {
+            println!("\x1b[31m✕\x1b[0m MCP server \x1b[1m{name}\x1b[0m unregistered");
         }
-        if !removed_skills.is_empty() {
-            println!("Removed skill{}:", if removed_skills.len() == 1 { "" } else { "s" });
-            for name in &removed_skills {
-                println!("  {name}");
-            }
-        }
-        println!("Removed ~/.epm/.");
     }
+    if !removed_skills.is_empty() {
+        for name in &removed_skills {
+            println!("\x1b[31m✕\x1b[0m Skills package \x1b[1m{name}\x1b[0m removed");
+        }
+    }
+    println!("\x1b[31m✕\x1b[0m \x1b[2m~/.epm/\x1b[0m deleted");
 
     // ── remove the binary (last — we're still running from it) ────────────────
     if !keep_binary {
         if let Ok(exe) = std::env::current_exe() {
             let _ = std::fs::remove_file(&exe);
-            println!("Removed {}.", exe.display());
+            println!("\x1b[31m✕\x1b[0m \x1b[2m{}\x1b[0m deleted", exe.display());
         }
-        println!("\nepm has been uninstalled.");
-        if !removed_mcps.is_empty() || !removed_skills.is_empty() {
-            println!("If you have any Claude Code instances running, you'll need to restart them.");
-        }
+    }
+
+    println!();
+    println!("\x1b[1mAll done. epm has left the building.\x1b[0m");
+    if !removed_mcps.is_empty() || !removed_skills.is_empty() {
+        println!("\x1b[2mIf you have any Claude Code instances running, restart them to apply the changes.\x1b[0m");
     }
 
     Ok(())
