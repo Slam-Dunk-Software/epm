@@ -68,7 +68,7 @@ async fn run_install(client: &RegistryClient, name: &str) -> Result<()> {
 
     println!("\n✓ {name} registered as MCP server");
     println!("  binary: {}", binary_path.display());
-    println!("\nRestart Claude to load the new server.");
+    println!("\nIf you have any Claude Code instances running, you'll need to restart them to load the new MCP server.");
     Ok(())
 }
 
@@ -194,7 +194,7 @@ fn run_remove(name: &str) -> Result<()> {
     }
 
     println!("Removed '{name}'.");
-    println!("Restart Claude to apply the change.");
+    println!("If you have any Claude Code instances running, you'll need to restart them to apply the change.");
     Ok(())
 }
 

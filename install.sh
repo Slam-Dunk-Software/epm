@@ -9,6 +9,17 @@ REPO="Slam-Dunk-Software/epm"
 INSTALL_DIR="${EPM_INSTALL_DIR:-/usr/local/bin}"
 QUIET=0
 
+# Colors (disabled if not a terminal)
+if [ -t 1 ]; then
+  BOLD="\033[1m"
+  GREEN="\033[32m"
+  CYAN="\033[36m"
+  YELLOW="\033[33m"
+  RESET="\033[0m"
+else
+  BOLD="" GREEN="" CYAN="" YELLOW="" RESET=""
+fi
+
 for arg in "$@"; do
   case "$arg" in
     --quiet|-q) QUIET=1 ;;
@@ -52,7 +63,7 @@ fi
 
 URL="https://github.com/$REPO/releases/download/$LATEST/epm-${TARGET}.tar.gz"
 
-echo "Installing epm $LATEST for $TARGET..."
+printf "${BOLD}Installing epm $LATEST for $TARGET...${RESET}\n"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -73,13 +84,13 @@ fi
 chmod +x "$INSTALL_DIR/epm"
 
 echo ""
-echo "✓ epm $LATEST installed to $INSTALL_DIR/epm"
+printf "${GREEN}✓ epm $LATEST installed to $INSTALL_DIR/epm${RESET}\n"
 echo ""
 
 # ── post-install setup ────────────────────────────────────────────────────────
 
 if [ "$QUIET" = "1" ]; then
-  echo "Run 'epm new <harness>' to get started."
+  printf "Run ${CYAN}epm new <harness>${RESET} to get started.\n"
   exit 0
 fi
 
@@ -93,7 +104,7 @@ prompt() {
   esac
 }
 
-echo "Would you like to set up a few extras? (skip any with 'n')"
+printf "${BOLD}Would you like to set up a few extras?${RESET} (skip any with 'n')"
 echo ""
 
 # MCP server
@@ -110,4 +121,4 @@ if prompt "  Install eps_skills (slash commands for Claude Code)?"; then
   echo ""
 fi
 
-echo "All done! Run 'epm new <harness>' to get started."
+printf "\n${GREEN}All done!${RESET} Run ${CYAN}epm new <harness>${RESET} to get started.\n"

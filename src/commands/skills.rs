@@ -65,7 +65,7 @@ async fn run_install(client: &RegistryClient, name: &str) -> Result<()> {
         let fname = Path::new(f).file_name().unwrap_or_default().to_string_lossy();
         println!("  /{}", fname.trim_end_matches(".md"));
     }
-    println!("\nRestart Claude Code to use the new skills.");
+    println!("\nIf you have any Claude Code instances running, you'll need to restart them to access the new skills.");
     Ok(())
 }
 
@@ -113,7 +113,7 @@ fn run_remove(name: &str) -> Result<()> {
     }
 
     println!("Removed '{name}' skills.");
-    println!("Restart Claude Code to apply the change.");
+    println!("If you have any Claude Code instances running, you'll need to restart them to apply the change.");
     Ok(())
 }
 

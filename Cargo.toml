@@ -1,6 +1,6 @@
 [package]
 name        = "epm"
-version     = "0.3.20"
+version     = "0.3.21"
 edition     = "2021"
 license     = "MIT"
 description = "The CLI for the EPS ecosystem — publish, search, and install personal software packages."
