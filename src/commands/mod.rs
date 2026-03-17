@@ -1,4 +1,5 @@
 pub mod adopt;
+pub mod self_uninstall;
 pub mod self_update;
 pub mod mcp;
 pub mod skills;

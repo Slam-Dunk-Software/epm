@@ -1,5 +1,6 @@
 mod client;
 mod commands;
+mod installed;
 mod models;
 mod update_check;
 
@@ -110,6 +111,15 @@ enum Commands {
     },
     /// Update epm to the latest version
     SelfUpdate,
+    /// Remove epm and everything it installed (MCP servers, skills, packages)
+    SelfUninstall {
+        /// Skip confirmation prompt
+        #[arg(long)]
+        yes: bool,
+        /// Do not remove the epm binary (useful for testing)
+        #[arg(long, hide = true)]
+        keep_binary: bool,
+    },
 }
 
 #[tokio::main]
@@ -167,9 +177,16 @@ async fn main() -> Result<()> {
         Commands::SelfUpdate => {
             commands::self_update::run().await?;
         }
+        Commands::SelfUninstall { yes, keep_binary } => {
+            commands::self_uninstall::run(*yes, *keep_binary)?;
+        }
     }
 
-    update_check::check_and_warn().await;
+    // Skip update check after self-uninstall — ~/.epm/ was just removed and
+    // update_check would recreate it via record_check().
+    if !matches!(&cli.command, Commands::SelfUninstall { .. }) {
+        update_check::check_and_warn().await;
+    }
 
     Ok(())
 }

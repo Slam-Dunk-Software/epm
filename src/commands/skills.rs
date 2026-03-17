@@ -11,6 +11,7 @@ use clap::Subcommand;
 
 use crate::client::RegistryClient;
 use crate::commands::{install, list::list_installed_versions, uninstall};
+use crate::installed::InstalledManifest;
 
 #[derive(Subcommand)]
 pub enum SkillsCommands {
@@ -58,9 +59,22 @@ async fn run_install(client: &RegistryClient, name: &str) -> Result<()> {
     }
 
     let dest = claude_commands_dir()?;
-    let installed = install_skill_files(files, &install_dir, &dest)?;
+    let installed_count = install_skill_files(files, &install_dir, &dest)?;
 
-    println!("\n✓ {name} skills installed ({} file{})", installed, if installed == 1 { "" } else { "s" });
+    // Record installed file paths in ~/.epm/installed.toml
+    let home = dirs::home_dir().context("could not determine home directory")?;
+    let installed_paths: Vec<String> = files
+        .iter()
+        .map(|f| {
+            let filename = Path::new(f).file_name().unwrap_or_default();
+            dest.join(filename).to_string_lossy().to_string()
+        })
+        .collect();
+    let mut manifest = InstalledManifest::load(&home);
+    manifest.add_skills(name, installed_paths);
+    manifest.save(&home)?;
+
+    println!("\n✓ {name} skills installed ({} file{})", installed_count, if installed_count == 1 { "" } else { "s" });
     for f in files {
         let fname = Path::new(f).file_name().unwrap_or_default().to_string_lossy();
         println!("  /{}", fname.trim_end_matches(".md"));
@@ -111,6 +125,12 @@ fn run_remove(name: &str) -> Result<()> {
         Err(e) if e.to_string().contains("not installed") => {}
         Err(e) => eprintln!("warning: could not uninstall package: {e}"),
     }
+
+    // Remove from ~/.epm/installed.toml
+    let home = dirs::home_dir().context("could not determine home directory")?;
+    let mut manifest = InstalledManifest::load(&home);
+    manifest.remove_skills(name);
+    manifest.save(&home)?;
 
     println!("Removed '{name}' skills.");
     println!("If you have any Claude Code instances running, you'll need to restart them to apply the change.");

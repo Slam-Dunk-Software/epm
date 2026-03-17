@@ -12,6 +12,7 @@ use serde_json::Value;
 
 use crate::client::RegistryClient;
 use crate::commands::{install, list::list_installed_versions, uninstall};
+use crate::installed::InstalledManifest;
 
 #[derive(Subcommand)]
 pub enum McpCommands {
@@ -65,6 +66,12 @@ async fn run_install(client: &RegistryClient, name: &str) -> Result<()> {
 
     // 5. Patch ~/.claude.json
     register_mcp_server(name, &binary_path, &mcp.args, &mcp.env)?;
+
+    // 6. Record in ~/.epm/installed.toml
+    let home = dirs::home_dir().context("could not determine home directory")?;
+    let mut manifest = InstalledManifest::load(&home);
+    manifest.add_mcp(name, &binary_path.to_string_lossy());
+    manifest.save(&home)?;
 
     println!("\n✓ {name} registered as MCP server");
     println!("  binary: {}", binary_path.display());
@@ -192,6 +199,12 @@ fn run_remove(name: &str) -> Result<()> {
         Err(e) if e.to_string().contains("not installed") => {}
         Err(e) => eprintln!("warning: could not uninstall package: {e}"),
     }
+
+    // 3. Remove from ~/.epm/installed.toml
+    let home = dirs::home_dir().context("could not determine home directory")?;
+    let mut manifest = InstalledManifest::load(&home);
+    manifest.remove_mcp(name);
+    manifest.save(&home)?;
 
     println!("Removed '{name}'.");
     println!("If you have any Claude Code instances running, you'll need to restart them to apply the change.");
