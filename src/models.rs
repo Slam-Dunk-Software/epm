@@ -19,7 +19,18 @@ pub struct EpsManifest {
     #[serde(default)]
     pub service: EpsService,
     #[serde(default)]
+    pub skills: EpsSkills,
+    #[serde(default)]
     pub mcp: EpsMcp,
+}
+
+/// Optional `[skills]` section — declares Claude Code slash command files.
+/// `epm skills install` copies these to `~/.claude/commands/`.
+#[derive(Debug, Deserialize, Default)]
+pub struct EpsSkills {
+    /// Paths relative to the package root, e.g. `["commands/semver-bump.md"]`
+    #[serde(default)]
+    pub files: Vec<String>,
 }
 
 /// Optional `[eps]` section — marks the repo as an EPS and carries metadata.
@@ -173,6 +184,59 @@ pub struct PackageWithVersions {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // --- EpsSkills ---
+
+    #[test]
+    fn eps_skills_defaults_to_empty_when_absent() {
+        let toml = r#"
+[package]
+name        = "mypkg"
+version     = "0.1.0"
+description = "Test"
+authors     = ["nick"]
+license     = "MIT"
+repository  = "https://github.com/nick/mypkg"
+"#;
+        let m: EpsManifest = toml::from_str(toml).unwrap();
+        assert!(m.skills.files.is_empty());
+    }
+
+    #[test]
+    fn eps_skills_parses_files_list() {
+        let toml = r#"
+[package]
+name        = "eps_skills"
+version     = "0.1.0"
+description = "Skills"
+authors     = ["nick"]
+license     = "MIT"
+repository  = "https://github.com/nick/eps_skills"
+
+[skills]
+files = ["commands/semver-bump.md", "commands/epc-release.md"]
+"#;
+        let m: EpsManifest = toml::from_str(toml).unwrap();
+        assert_eq!(m.skills.files, vec!["commands/semver-bump.md", "commands/epc-release.md"]);
+    }
+
+    #[test]
+    fn eps_skills_empty_files_list() {
+        let toml = r#"
+[package]
+name        = "eps_skills"
+version     = "0.1.0"
+description = "Skills"
+authors     = ["nick"]
+license     = "MIT"
+repository  = "https://github.com/nick/eps_skills"
+
+[skills]
+files = []
+"#;
+        let m: EpsManifest = toml::from_str(toml).unwrap();
+        assert!(m.skills.files.is_empty());
+    }
 
     // --- EpsManifest / EpsPackage (TOML parsing) ---
 

@@ -1,6 +1,7 @@
 pub mod adopt;
 pub mod self_update;
 pub mod mcp;
+pub mod skills;
 pub mod new;
 pub mod runtime;
 pub mod info;

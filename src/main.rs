@@ -9,6 +9,7 @@ use clap::{Parser, Subcommand};
 use client::RegistryClient;
 use commands::mcp::McpCommands;
 use commands::runtime::RuntimeCommands;
+use commands::skills::SkillsCommands;
 
 const REGISTRY: &str = "https://epm.dev";
 
@@ -102,6 +103,11 @@ enum Commands {
         #[command(subcommand)]
         command: McpCommands,
     },
+    /// Install, list, and remove Claude Code skill packages
+    Skills {
+        #[command(subcommand)]
+        command: SkillsCommands,
+    },
     /// Update epm to the latest version
     SelfUpdate,
 }
@@ -154,6 +160,9 @@ async fn main() -> Result<()> {
         }
         Commands::Mcp { command } => {
             commands::mcp::run(command, &client).await?;
+        }
+        Commands::Skills { command } => {
+            commands::skills::run(command, &client).await?;
         }
         Commands::SelfUpdate => {
             commands::self_update::run().await?;
