@@ -96,7 +96,7 @@ fi
 
 # Read from /dev/tty so prompts work even when piped through curl
 prompt() {
-  printf "%s [Y/n] " "$1"
+  printf "${CYAN}[?]${RESET} %s ${BOLD}[Y/n]${RESET} " "$1"
   read -r answer </dev/tty
   case "$answer" in
     [nN]*) return 1 ;;
@@ -104,8 +104,7 @@ prompt() {
   esac
 }
 
-printf "${BOLD}Would you like to set up a few extras?${RESET} (skip any with 'n')"
-echo ""
+printf "${BOLD}Would you like to set up a few extras?${RESET} (skip any with 'n')\n"
 
 # MCP server
 if prompt "  Install eps_mcp (MCP knowledge server for Claude Code)?"; then
