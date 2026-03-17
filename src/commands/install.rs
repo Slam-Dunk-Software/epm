@@ -38,16 +38,15 @@ pub async fn install_version(client: &RegistryClient, name: &str, version: &Vers
 
     if install_root.exists() {
         println!(
-            "{name}@{} is already installed at {}",
+            "\x1b[32m✓\x1b[0m \x1b[1m{name}@{}\x1b[0m \x1b[2mis already installed\x1b[0m",
             version.version,
-            install_root.display()
         );
         return Ok(());
     }
 
     println!(
-        "Installing {name}@{} from {} ...",
-        version.version, version.git_url
+        "\x1b[2mInstalling \x1b[0m\x1b[1m{name}@{}\x1b[0m\x1b[2m...\x1b[0m",
+        version.version,
     );
 
     let install_str = install_root
@@ -91,9 +90,8 @@ pub async fn install_version(client: &RegistryClient, name: &str, version: &Vers
     }
 
     println!(
-        "Installed {name}@{} to {}",
+        "\n\x1b[32m✓\x1b[0m \x1b[1m{name}@{}\x1b[0m \x1b[2minstalled\x1b[0m",
         version.version,
-        install_root.display()
     );
 
     client.track_install(name, &version.version).await;
@@ -109,7 +107,7 @@ fn read_local_manifest(install_root: &Path) -> Result<EpsManifest> {
 }
 
 pub fn run_hook(script: &str, cwd: &Path, pkg_name: &str, pkg_version: &str) -> Result<()> {
-    println!("Running install hook: {script}");
+    println!("\x1b[2mRunning install hook: {script}\x1b[0m");
     let status = Command::new("sh")
         .arg(script)
         .current_dir(cwd)

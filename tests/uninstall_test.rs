@@ -32,7 +32,8 @@ fn uninstall_pinned_version_prints_success_message() {
 
     epm_uninstall(&home, "tech_talker@0.1.0")
         .success()
-        .stdout(predicate::str::contains("Uninstalled tech_talker@0.1.0"));
+        .stdout(predicate::str::contains("tech_talker@0.1.0"))
+        .stdout(predicate::str::contains("uninstalled"));
 }
 
 #[test]

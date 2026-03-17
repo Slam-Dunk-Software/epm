@@ -19,14 +19,14 @@ pub async fn run(client: &RegistryClient, name: &str) -> Result<()> {
     let target = install_root.join(&latest.version);
 
     if target.exists() {
-        println!("{name}@{} is already up to date", latest.version);
+        println!("\x1b[32m✓\x1b[0m \x1b[1m{name}\x1b[0m is already up to date \x1b[2m({})\x1b[0m", latest.version);
         return Ok(());
     }
 
     if let Ok(installed) = list_installed_versions(&install_root) {
         if !installed.is_empty() {
             println!(
-                "Upgrading {name}: {} → {}",
+                "\x1b[2mUpgrading\x1b[0m \x1b[1m{name}\x1b[0m\x1b[2m: {} → \x1b[0m\x1b[1m{}\x1b[0m",
                 installed.join(", "),
                 latest.version
             );

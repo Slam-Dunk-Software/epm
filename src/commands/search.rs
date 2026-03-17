@@ -21,7 +21,7 @@ pub async fn run(client: &RegistryClient, query: Option<&str>) -> Result<()> {
 
     if filtered.is_empty() {
         if let Some(q) = query {
-            println!("No packages matching '{q}'.");
+            println!("No packages matching \x1b[1m'{q}'\x1b[0m.");
         } else {
             println!("No packages in registry.");
         }
@@ -29,11 +29,11 @@ pub async fn run(client: &RegistryClient, query: Option<&str>) -> Result<()> {
     }
 
     let name_width = filtered.iter().map(|p| p.name.len()).max().unwrap_or(4);
-    println!("{:<name_width$}  {}", "NAME", "DESCRIPTION", name_width = name_width);
-    println!("{}", "-".repeat(name_width + 2 + 50));
+    println!("\x1b[2m{:<name_width$}  {}\x1b[0m", "NAME", "DESCRIPTION", name_width = name_width);
+    println!("\x1b[2m{}\x1b[0m", "─".repeat(name_width + 2 + 50));
 
     for pkg in filtered {
-        println!("{:<name_width$}  {}", pkg.name, pkg.description, name_width = name_width);
+        println!("\x1b[1m{:<name_width$}\x1b[0m  \x1b[2m{}\x1b[0m", pkg.name, pkg.description, name_width = name_width);
     }
 
     Ok(())

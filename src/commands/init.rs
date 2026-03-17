@@ -167,19 +167,18 @@ echo "Running {name}..."
         }
     }
 
-    println!("Created EPS package '{name}'");
-    println!();
-    println!("  {name}/eps.toml");
+    println!("\n\x1b[32m✓\x1b[0m Created EPS package \x1b[1m{name}\x1b[0m\n");
+    println!("\x1b[2m  {name}/eps.toml");
     println!("  {name}/CUSTOMIZE.md");
     println!("  {name}/run.sh");
     if !no_git {
         println!("  {name}/.git/");
     }
-    println!();
-    println!("Next steps:");
-    println!("  cd {name}");
-    println!("  # fill in eps.toml and CUSTOMIZE.md, then:");
-    println!("  epm publish");
+    println!("\x1b[0m");
+    println!("\x1b[2mNext steps:\x1b[0m");
+    println!("  \x1b[36mcd {name}\x1b[0m");
+    println!("  \x1b[2m# fill in eps.toml and CUSTOMIZE.md, then:\x1b[0m");
+    println!("  \x1b[36mepm publish\x1b[0m");
 
     Ok(())
 }

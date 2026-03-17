@@ -4,7 +4,7 @@ const INSTALL_URL: &str =
     "https://raw.githubusercontent.com/Slam-Dunk-Software/epm/main/install.sh";
 
 pub async fn run() -> Result<()> {
-    println!("Checking for updates...");
+    println!("\x1b[2mChecking for updates...\x1b[0m");
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
@@ -32,11 +32,11 @@ pub async fn run() -> Result<()> {
     let current_ver = semver::Version::parse(current)?;
 
     if latest_ver <= current_ver {
-        println!("Already up to date (v{current}).");
+        println!("\x1b[32m✓\x1b[0m Already up to date \x1b[2m(v{current})\x1b[0m");
         return Ok(());
     }
 
-    println!("Updating epm v{current} → v{latest}...");
+    println!("\x1b[2mUpdating epm\x1b[0m \x1b[1mv{current}\x1b[0m \x1b[2m→\x1b[0m \x1b[1mv{latest}\x1b[0m\x1b[2m...\x1b[0m");
 
     let status = std::process::Command::new("sh")
         .arg("-c")
@@ -47,6 +47,6 @@ pub async fn run() -> Result<()> {
         anyhow::bail!("Update failed. Try manually: curl -fsSL {INSTALL_URL} | sh");
     }
 
-    println!("\n✓ epm v{latest} installed.");
+    println!("\n\x1b[32m✓\x1b[0m \x1b[1mepm v{latest}\x1b[0m installed.");
     Ok(())
 }

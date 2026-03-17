@@ -34,7 +34,7 @@ pub fn run(spec: &str) -> Result<()> {
     }
 
     fs::remove_dir_all(&target)?;
-    println!("Uninstalled {name}@{version}");
+    println!("\x1b[31m✕\x1b[0m \x1b[1m{name}@{version}\x1b[0m \x1b[2muninstalled\x1b[0m");
 
     // Remove the package directory if it's now empty (last version removed)
     if pkg_root.read_dir().map(|mut d| d.next().is_none()).unwrap_or(false) {

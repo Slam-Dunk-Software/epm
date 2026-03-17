@@ -43,7 +43,7 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
         bail!("git is required but was not found.\nInstall it from https://git-scm.com/downloads and try again.");
     }
 
-    println!("Creating {dest} from {name}@{} ...", version.version);
+    println!("\x1b[2mCreating \x1b[0m\x1b[1m{dest}\x1b[0m\x1b[2m from {name}@{}...\x1b[0m", version.version);
 
     // Clone the harness
     let clone_ok = Command::new("git")
@@ -127,13 +127,13 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
         .and_then(|s| toml::from_str::<EpsManifest>(&s).ok())
         .and_then(|m| if m.service.enabled { m.service.start } else { None });
 
-    println!("\n✓ Ready at ./{dest}/");
+    println!("\n\x1b[32m✓\x1b[0m Ready at \x1b[1m./{dest}/\x1b[0m");
     if let Some(start) = start_cmd {
-        println!("\n  Run it:");
-        println!("    cd {dest} && {start}");
-        println!("\n  Then read CUSTOMIZE.md to make it yours.");
+        println!("\n  \x1b[2mRun it:\x1b[0m");
+        println!("    \x1b[36mcd {dest} && {start}\x1b[0m");
+        println!("\n  \x1b[2mThen read\x1b[0m \x1b[1mCUSTOMIZE.md\x1b[0m \x1b[2mto make it yours.\x1b[0m");
     } else {
-        println!("  cd {dest} && cat CUSTOMIZE.md");
+        println!("  \x1b[36mcd {dest} && cat CUSTOMIZE.md\x1b[0m");
     }
 
     Ok(())

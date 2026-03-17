@@ -106,8 +106,8 @@ async fn install_prints_success_message_with_path() {
 
     epm_install(&server.uri(), &home, PKG)
         .success()
-        .stdout(predicate::str::contains("Installed"))
-        .stdout(predicate::str::contains(".epm"));
+        .stdout(predicate::str::contains("tech_talker@0.1.0"))
+        .stdout(predicate::str::contains("installed"));
 }
 
 // ── pinned version (@syntax) ──────────────────────────────────────────────────

@@ -121,7 +121,8 @@ async fn search_no_matches_shows_expected_message() {
         .args(["search", "zzz_no_match_zzz"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("No packages matching 'zzz_no_match_zzz'"));
+        .stdout(predicate::str::contains("No packages matching"))
+        .stdout(predicate::str::contains("zzz_no_match_zzz"));
 }
 
 #[tokio::test(flavor = "multi_thread")]
