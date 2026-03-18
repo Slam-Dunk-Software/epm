@@ -22,6 +22,7 @@ pub async fn run(client: &RegistryClient, name: &str, wipe: bool) -> Result<()> 
 
     let record = read_adoption_record(&vendor_path)?;
     let pkg = client.get_package(name).await?;
+    if pkg.is_epm_core() { crate::commands::guard_epm_core(name); }
     let latest = select_latest_version(pkg.versions)
         .ok_or_else(|| anyhow::anyhow!("no non-yanked versions available for '{name}'"))?;
 

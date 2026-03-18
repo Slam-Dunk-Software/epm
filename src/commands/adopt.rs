@@ -50,6 +50,7 @@ pub async fn run(client: &RegistryClient, spec: &str) -> Result<()> {
     }
 
     let pkg = client.get_package(name).await?;
+    if pkg.is_epm_core() { crate::commands::guard_epm_core(name); }
     let version: Version = if let Some(ver) = pinned_version {
         pkg.versions
             .into_iter()

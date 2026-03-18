@@ -29,11 +29,24 @@ pub async fn run(client: &RegistryClient, query: Option<&str>) -> Result<()> {
     }
 
     let name_width = filtered.iter().map(|p| p.name.len()).max().unwrap_or(4);
-    println!("\x1b[2m{:<name_width$}  {}\x1b[0m", "NAME", "DESCRIPTION", name_width = name_width);
-    println!("\x1b[2m{}\x1b[0m", "─".repeat(name_width + 2 + 50));
+    println!(
+        "\x1b[2m{:<name_width$}  {:<11}  {}\x1b[0m",
+        "NAME", "TYPE", "DESCRIPTION",
+        name_width = name_width
+    );
+    println!("\x1b[2m{}\x1b[0m", "─".repeat(name_width + 2 + 11 + 2 + 50));
 
-    for pkg in filtered {
-        println!("\x1b[1m{:<name_width$}\x1b[0m  \x1b[2m{}\x1b[0m", pkg.name, pkg.description, name_width = name_width);
+    for pkg in &filtered {
+        let type_badge: &str = if pkg.is_epm_core() {
+            "\x1b[33m[epm_core]\x1b[0m "
+        } else {
+            "\x1b[2m          \x1b[0m  "
+        };
+        println!(
+            "\x1b[1m{:<name_width$}\x1b[0m  {}  \x1b[2m{}\x1b[0m",
+            pkg.name, type_badge, pkg.description,
+            name_width = name_width
+        );
     }
 
     Ok(())

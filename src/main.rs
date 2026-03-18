@@ -86,6 +86,11 @@ enum Commands {
         /// Package spec: <name> or <name@version>
         spec: String,
     },
+    /// Open a package page in your browser
+    Open {
+        /// Package name
+        name: String,
+    },
     /// Check for upstream changes on an adopted package
     Sync {
         /// Package name
@@ -162,11 +167,14 @@ async fn main() -> Result<()> {
         Commands::Adopt { spec } => {
             commands::adopt::run(&client, spec).await?;
         }
+        Commands::Open { name } => {
+            commands::open::run(&registry, name)?;
+        }
         Commands::Sync { name, wipe } => {
             commands::sync::run(&client, name, *wipe).await?;
         }
         Commands::Runtime { command } => {
-            commands::runtime::run(command, &client).await?;
+            commands::runtime::run(command).await?;
         }
         Commands::Mcp { command } => {
             commands::mcp::run(command, &client).await?;

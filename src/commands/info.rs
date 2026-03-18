@@ -4,6 +4,7 @@ use crate::client::RegistryClient;
 
 pub async fn run(client: &RegistryClient, name: &str) -> Result<()> {
     let pkg = client.get_package(name).await?;
+    if pkg.is_epm_core() { crate::commands::guard_epm_core(name); }
 
     println!("Name:        {}", pkg.name);
     println!("Description: {}", pkg.description);

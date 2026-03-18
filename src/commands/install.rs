@@ -159,6 +159,7 @@ pub async fn run(client: &RegistryClient, spec: &str) -> Result<()> {
 
     // Always fetch the full package so we can check platforms before cloning.
     let pkg = client.get_package(name).await?;
+    if pkg.is_epm_core() { crate::commands::guard_epm_core(name); }
     check_platform(&pkg.platforms, name)?;
 
     let version: Version = if let Some(ver) = pinned_version {

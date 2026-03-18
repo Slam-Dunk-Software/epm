@@ -4,6 +4,8 @@
 //! Installing one builds the binary (via the package's install hook) and
 //! registers it in `~/.claude.json` under `mcpServers`.
 
+use std::collections::HashMap;
+use std::io::{self, Write};
 use std::path::PathBuf;
 
 use anyhow::{bail, Context, Result};
@@ -64,8 +66,38 @@ async fn run_install(client: &RegistryClient, name: &str) -> Result<()> {
     // 4. Find the binary (release build first, then debug)
     let binary_path = find_binary(&install_dir, binary_name)?;
 
-    // 5. Patch ~/.claude.json
-    register_mcp_server(name, &binary_path, &mcp.args, &mcp.env)?;
+    // 5. Collect env: start with static entries, then prompt for any env_prompts.
+    //
+    // FUTURE IMPROVEMENTS:
+    //   - Validate that path-like values actually exist on disk; warn or error if not.
+    //   - Skip prompting for a key if it's already set in the user's shell environment
+    //     (treat the env value as a sensible default).
+    //   - Add `epm mcp configure <name>` to re-run prompts without reinstalling.
+    //   - Support optional prompts (marked nullable) so the user can leave them blank.
+    //   - Consider an `EPM_ENV_OUTPUT` hook protocol as an alternative for packages
+    //     that can auto-detect values without user input (hook writes KEY=VALUE lines
+    //     to a temp file; epm reads and merges them). Good for future packages that
+    //     can infer paths from well-known locations.
+    let mut env = mcp.env.clone();
+    if !mcp.env_prompts.is_empty() {
+        println!("\n{name} requires some configuration:\n");
+        let mut keys: Vec<&String> = mcp.env_prompts.keys().collect();
+        keys.sort(); // deterministic order
+        for key in keys {
+            let description = &mcp.env_prompts[key];
+            println!("  \x1b[1m{key}\x1b[0m — {description}");
+            print!("  > ");
+            io::stdout().flush()?;
+            let mut input = String::new();
+            io::stdin().read_line(&mut input)?;
+            let value = expand_tilde(input.trim());
+            env.insert(key.clone(), value);
+        }
+        println!();
+    }
+
+    // 6. Patch ~/.claude.json
+    register_mcp_server(name, &binary_path, &mcp.args, &env)?;
 
     // 6. Record in ~/.epm/installed.toml
     let home = dirs::home_dir().context("could not determine home directory")?;
@@ -213,6 +245,15 @@ fn run_remove(name: &str) -> Result<()> {
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
+fn expand_tilde(s: &str) -> String {
+    if s.starts_with("~/") || s == "~" {
+        if let Ok(home) = std::env::var("HOME") {
+            return s.replacen("~", &home, 1);
+        }
+    }
+    s.to_string()
+}
+
 fn claude_json_path() -> Result<PathBuf> {
     Ok(dirs::home_dir()
         .context("could not determine home directory")?
@@ -230,4 +271,36 @@ fn read_manifest(install_dir: &std::path::Path) -> Result<crate::models::EpsMani
     let path = install_dir.join("eps.toml");
     let raw = std::fs::read_to_string(&path)?;
     Ok(toml::from_str(&raw)?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn expand_tilde_replaces_leading_tilde_slash() {
+        std::env::set_var("HOME", "/home/testuser");
+        assert_eq!(expand_tilde("~/projects/epc/docs"), "/home/testuser/projects/epc/docs");
+    }
+
+    #[test]
+    fn expand_tilde_replaces_bare_tilde() {
+        std::env::set_var("HOME", "/home/testuser");
+        assert_eq!(expand_tilde("~"), "/home/testuser");
+    }
+
+    #[test]
+    fn expand_tilde_leaves_absolute_path_unchanged() {
+        assert_eq!(expand_tilde("/absolute/path"), "/absolute/path");
+    }
+
+    #[test]
+    fn expand_tilde_leaves_relative_path_unchanged() {
+        assert_eq!(expand_tilde("relative/path"), "relative/path");
+    }
+
+    #[test]
+    fn expand_tilde_does_not_expand_tilde_in_middle_of_path() {
+        assert_eq!(expand_tilde("/some/~/path"), "/some/~/path");
+    }
 }

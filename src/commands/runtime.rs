@@ -1,4 +1,4 @@
-//! `epm runtime` — install and manage the EPS runtime tools (epc + observatory).
+//! `epm runtime` — install and manage the EPS runtime tools (epc + observatory + tree_walker).
 //!
 //! These are treated specially: they bypass the registry entirely and are
 //! sourced directly from their canonical GitHub repos.
@@ -12,6 +12,7 @@ use semver::Version;
 
 const EPC_REPO:          &str = "Slam-Dunk-Software/epc";
 const OBSERVATORY_REPO:  &str = "Slam-Dunk-Software/observatory";
+const TREE_WALKER_REPO:  &str = "Slam-Dunk-Software/tree_walker";
 const OBSERVATORY_DEST:  &str = "observatory";  // relative to home dir
 
 #[derive(Subcommand)]
@@ -44,15 +45,18 @@ pub async fn run(cmd: &RuntimeCommands) -> Result<()> {
 
 async fn run_install(only: Option<&str>) -> Result<()> {
     match only {
-        Some("epc")         => install_epc().await,
-        Some("observatory") => install_observatory(),
-        Some(other)         => anyhow::bail!(
-            "unknown component '{other}' — valid options: epc, observatory"
+        Some("epc")          => install_epc().await,
+        Some("observatory")  => install_observatory(),
+        Some("tree_walker")  => install_tree_walker().await,
+        Some(other)          => anyhow::bail!(
+            "unknown component '{other}' — valid options: epc, observatory, tree_walker"
         ),
         None => {
             install_epc().await?;
             println!();
-            install_observatory()
+            install_observatory()?;
+            println!();
+            install_tree_walker().await
         }
     }
 }
@@ -131,6 +135,69 @@ fn install_observatory() -> Result<()> {
     Ok(())
 }
 
+async fn install_tree_walker() -> Result<()> {
+    let install_dir = epc_install_dir()?; // same ~/.local/bin
+    let dest = install_dir.join("tree_walker");
+
+    if dest.exists() {
+        let current = tree_walker_installed_version();
+        println!("\x1b[32m✓\x1b[0m \x1b[1mtree_walker\x1b[0m \x1b[2malready installed{}\x1b[0m",
+            current.as_deref().map(|v| format!(" (v{v})")).unwrap_or_default()
+        );
+        return Ok(());
+    }
+
+    println!("\x1b[2mInstalling\x1b[0m \x1b[1mtree_walker\x1b[0m\x1b[2m...\x1b[0m");
+
+    let (url, version) = latest_release_download_url(TREE_WALKER_REPO, tree_walker_asset_name()).await?;
+    download_binary(&url, &dest).await?;
+
+    println!("\x1b[32m✓\x1b[0m \x1b[1mtree_walker v{version}\x1b[0m \x1b[2minstalled to {}\x1b[0m",
+        dest.display());
+    println!("  \x1b[2mMake sure {} is on your PATH.\x1b[0m", install_dir.display());
+
+    Ok(())
+}
+
+async fn upgrade_tree_walker() -> Result<()> {
+    eprintln!("\x1b[2mChecking for tree_walker updates...\x1b[0m");
+
+    let client = http_client()?;
+    let latest = latest_version(&client, TREE_WALKER_REPO).await?;
+    let current = tree_walker_installed_version();
+    let current_str = current.as_deref().unwrap_or("unknown");
+
+    if let Some(ref c) = current {
+        let cv = Version::parse(c).ok();
+        let lv = Version::parse(&latest).ok();
+        if cv.is_some() && cv >= lv {
+            println!("\x1b[32m✓\x1b[0m \x1b[1mtree_walker\x1b[0m \x1b[2malready up to date (v{c})\x1b[0m");
+            return Ok(());
+        }
+    }
+
+    println!("\x1b[2mUpdating tree_walker\x1b[0m \x1b[1mv{current_str}\x1b[0m \x1b[2m→\x1b[0m \x1b[1mv{latest}\x1b[0m\x1b[2m...\x1b[0m");
+
+    let asset = tree_walker_asset_name();
+    let download_url = release_asset_url(&client, TREE_WALKER_REPO, &latest, asset).await?;
+
+    let dest = if let Ok(p) = which::which("tree_walker") { p } else { epc_install_dir()?.join("tree_walker") };
+    let tmp = dest.with_extension("tmp");
+    download_binary_with_client(&client, &download_url, &tmp).await?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o755))?;
+    }
+
+    std::fs::rename(&tmp, &dest)
+        .with_context(|| format!("failed to replace binary at {}", dest.display()))?;
+
+    println!("\n\x1b[32m✓\x1b[0m \x1b[1mtree_walker v{latest}\x1b[0m installed.");
+    Ok(())
+}
+
 // ── upgrade ───────────────────────────────────────────────────────────────────
 
 async fn run_upgrade(only: Option<&str>) -> Result<()> {
@@ -140,9 +207,10 @@ async fn run_upgrade(only: Option<&str>) -> Result<()> {
             println!("\x1b[2mTo pick up changes after editing, run:\x1b[0m \x1b[36mepc restart observatory\x1b[0m");
             Ok(())
         }
+        Some("tree_walker") => upgrade_tree_walker().await,
         Some("epc") | None => upgrade_epc().await,
         Some(other) => anyhow::bail!(
-            "unknown component '{other}' — valid options: epc, observatory"
+            "unknown component '{other}' — valid options: epc, observatory, tree_walker"
         ),
     }
 }
@@ -203,6 +271,12 @@ async fn run_status() -> Result<()> {
     let obs_latest = latest_version(&client, OBSERVATORY_REPO).await.ok();
     print_status("observatory", obs_current.as_deref(), obs_latest.as_deref(),
         "cd ~/observatory && git pull");
+
+    // tree_walker
+    let tw_current = tree_walker_installed_version();
+    let tw_latest = latest_version(&client, TREE_WALKER_REPO).await.ok();
+    print_status("tree_walker", tw_current.as_deref(), tw_latest.as_deref(),
+        "epm runtime upgrade tree_walker");
 
     Ok(())
 }
@@ -332,6 +406,21 @@ fn epc_installed_version() -> Option<String> {
     let out = Command::new("epc").arg("--version").output().ok()?;
     let s = String::from_utf8_lossy(&out.stdout);
     // "epc 0.1.5" → "0.1.5"
+    s.trim().split_whitespace().nth(1).map(String::from)
+}
+
+fn tree_walker_asset_name() -> &'static str {
+    if cfg!(target_os = "macos") {
+        if cfg!(target_arch = "aarch64") { "tree_walker-macos-aarch64" } else { "tree_walker-macos-x86_64" }
+    } else {
+        "tree_walker-linux-x86_64"
+    }
+}
+
+fn tree_walker_installed_version() -> Option<String> {
+    let out = Command::new("tree_walker").arg("--version").output().ok()?;
+    let s = String::from_utf8_lossy(&out.stdout);
+    // "tree_walker 0.1.0" → "0.1.0"
     s.trim().split_whitespace().nth(1).map(String::from)
 }
 

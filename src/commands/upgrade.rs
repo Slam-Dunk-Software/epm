@@ -6,6 +6,7 @@ use crate::commands::list::list_installed_versions;
 
 pub async fn run(client: &RegistryClient, name: &str) -> Result<()> {
     let pkg = client.get_package(name).await?;
+    if pkg.is_epm_core() { crate::commands::guard_epm_core(name); }
     check_platform(&pkg.platforms, name)?;
     let latest = select_latest_version(pkg.versions)
         .ok_or_else(|| anyhow!("no non-yanked versions for '{name}'"))?;

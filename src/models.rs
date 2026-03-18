@@ -81,9 +81,15 @@ pub struct EpsMcp {
     /// Optional extra CLI args to pass when registering with the MCP client
     #[serde(default)]
     pub args: Vec<String>,
-    /// Optional env vars to set in the MCP client config
+    /// Static env vars written directly to the MCP client config (values known at publish time)
     #[serde(default)]
     pub env: std::collections::HashMap<String, String>,
+    /// Env vars that require user input at install time.
+    /// Key = env var name, value = human-readable prompt shown to the user.
+    /// `epm mcp install` will interactively prompt for each key and write the
+    /// answers into the MCP client config alongside any static `env` entries.
+    #[serde(default)]
+    pub env_prompts: std::collections::HashMap<String, String>,
 }
 
 /// Sent to POST /api/v1/packages
@@ -138,16 +144,23 @@ pub struct AdoptionMeta {
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct Package {
-    pub id:          i64,
-    pub name:        String,
-    pub description: String,
-    pub authors:     Vec<String>,
-    pub license:     String,
-    pub homepage:    Option<String>,
-    pub repository:  String,
-    pub platforms:   Vec<String>,
-    pub created_at:  String,
-    pub updated_at:  String,
+    pub id:           i64,
+    pub name:         String,
+    pub description:  String,
+    pub authors:      Vec<String>,
+    pub license:      String,
+    pub homepage:     Option<String>,
+    pub repository:   String,
+    pub package_type: Option<String>,
+    pub platforms:    Vec<String>,
+    pub created_at:   String,
+    pub updated_at:   String,
+}
+
+impl Package {
+    pub fn is_epm_core(&self) -> bool {
+        self.package_type.as_deref() == Some("epm_core")
+    }
 }
 
 #[allow(dead_code)]
@@ -168,17 +181,24 @@ pub struct Version {
 #[derive(Debug, Deserialize)]
 pub struct PackageWithVersions {
     // flattened Package fields
-    pub id:          i64,
-    pub name:        String,
-    pub description: String,
-    pub authors:     Vec<String>,
-    pub license:     String,
-    pub homepage:    Option<String>,
-    pub repository:  String,
-    pub platforms:   Vec<String>,
-    pub created_at:  String,
-    pub updated_at:  String,
-    pub versions:    Vec<Version>,
+    pub id:           i64,
+    pub name:         String,
+    pub description:  String,
+    pub authors:      Vec<String>,
+    pub license:      String,
+    pub homepage:     Option<String>,
+    pub repository:   String,
+    pub package_type: Option<String>,
+    pub platforms:    Vec<String>,
+    pub created_at:   String,
+    pub updated_at:   String,
+    pub versions:     Vec<Version>,
+}
+
+impl PackageWithVersions {
+    pub fn is_epm_core(&self) -> bool {
+        self.package_type.as_deref() == Some("epm_core")
+    }
 }
 
 #[cfg(test)]
@@ -334,6 +354,76 @@ uninstall = "scripts/uninstall.sh"
         assert_eq!(m.hooks.configure, Some("scripts/configure.sh".to_string()));
         assert_eq!(m.hooks.update,    Some("scripts/update.sh".to_string()));
         assert_eq!(m.hooks.uninstall, Some("scripts/uninstall.sh".to_string()));
+    }
+
+    // --- EpsMcp / env_prompts ---
+
+    #[test]
+    fn eps_mcp_env_prompts_defaults_to_empty_when_absent() {
+        let toml = r#"
+[package]
+name        = "mypkg"
+version     = "0.1.0"
+description = "Test"
+authors     = ["nick"]
+license     = "MIT"
+repository  = "https://github.com/nick/mypkg"
+
+[mcp]
+binary = "mypkg"
+"#;
+        let m: EpsManifest = toml::from_str(toml).unwrap();
+        assert!(m.mcp.env_prompts.is_empty());
+    }
+
+    #[test]
+    fn eps_mcp_env_prompts_parses_table() {
+        let toml = r#"
+[package]
+name        = "eps_mcp"
+version     = "0.1.0"
+description = "MCP server"
+authors     = ["nick"]
+license     = "MIT"
+repository  = "https://github.com/nick/eps_mcp"
+
+[mcp]
+binary = "eps_mcp"
+
+[mcp.env_prompts]
+EPC_DOCS_PATH = "Path to your local epc docs/ directory"
+"#;
+        let m: EpsManifest = toml::from_str(toml).unwrap();
+        assert_eq!(m.mcp.env_prompts.len(), 1);
+        assert_eq!(
+            m.mcp.env_prompts["EPC_DOCS_PATH"],
+            "Path to your local epc docs/ directory"
+        );
+    }
+
+    #[test]
+    fn eps_mcp_env_prompts_and_static_env_coexist() {
+        let toml = r#"
+[package]
+name        = "mypkg"
+version     = "0.1.0"
+description = "Test"
+authors     = ["nick"]
+license     = "MIT"
+repository  = "https://github.com/nick/mypkg"
+
+[mcp]
+binary = "mypkg"
+
+[mcp.env]
+STATIC_KEY = "static_value"
+
+[mcp.env_prompts]
+PROMPTED_KEY = "Describe this setting"
+"#;
+        let m: EpsManifest = toml::from_str(toml).unwrap();
+        assert_eq!(m.mcp.env["STATIC_KEY"], "static_value");
+        assert_eq!(m.mcp.env_prompts["PROMPTED_KEY"], "Describe this setting");
     }
 
     // --- Package ---
