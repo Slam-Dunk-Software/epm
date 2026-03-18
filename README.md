@@ -2,56 +2,89 @@
 
 [![CI](https://github.com/Slam-Dunk-Software/epm/actions/workflows/ci.yml/badge.svg)](https://github.com/Slam-Dunk-Software/epm/actions/workflows/ci.yml)
 
-The CLI for the [EPS](https://github.com/nickagliano/eps_mcp) ecosystem. Publish, search, and install personal software packages from an [EPM registry](https://github.com/Slam-Dunk-Software/epm_registry).
+The CLI for the [EPS](https://github.com/Slam-Dunk-Software/eps_docs) ecosystem — publish, search, and install personal software packages.
 
 ## Installation
 
 ```sh
-cargo install --git https://github.com/Slam-Dunk-Software/epm
+curl -fsSL https://raw.githubusercontent.com/Slam-Dunk-Software/epm/main/install.sh | sh
 ```
 
-Or build from source:
+Installs a pre-built binary to `~/.local/bin`. Verify:
 
 ```sh
-git clone https://github.com/Slam-Dunk-Software/epm
-cd epm
-cargo build --release
-# binary at target/release/epm
+epm --version
 ```
 
-## Usage
+## Commands
+
+### Packages
 
 ```sh
-# publish the package in the current directory
-epm publish
+epm search                  # browse all packages
+epm search todo             # filter by name / description
+epm info todo               # details + versions
+epm install todo            # install a package
+epm install todo@0.1.0      # pin a specific version
+epm upgrade todo            # upgrade to latest
+epm uninstall todo          # remove a package
+epm list                    # list installed packages
+```
 
-# search the registry
-epm search todo
+### Harnesses
 
-# get info on a package
-epm info todo
+```sh
+epm new todo                # scaffold a harness into ./todo/ (yours to customize)
+epm new todo my-tasks       # custom directory name
+```
 
-# install a package
-epm install todo
-epm install todo@0.1.0   # pin a version
+### Runtime
 
-# list installed packages
-epm list
+```sh
+epm runtime install         # install epc + scaffold observatory
+epm runtime install epc     # just epc
+epm runtime upgrade epc     # upgrade epc to latest release
+epm runtime status          # show installed vs latest versions
+```
 
-# upgrade a package
-epm upgrade todo
+### MCP servers
 
-# uninstall a package
-epm uninstall todo
+```sh
+epm mcp install eps_mcp     # install + register an MCP server with Claude
+epm mcp list                # list registered MCP servers
+epm mcp remove eps_mcp      # unregister + uninstall
+```
+
+### Skills (Claude Code slash commands)
+
+```sh
+epm skills install eps_skills   # install skill packages
+epm skills list                 # list installed skills
+epm skills remove eps_skills    # remove skills
+```
+
+### Publishing
+
+```sh
+epm init my-package         # scaffold a new EPS package
+epm publish                 # publish current package to the registry
+epm adopt todo              # pull a package into vendor/ as first-class source
+epm sync todo               # check for upstream changes on an adopted package
+```
+
+### Self
+
+```sh
+epm self-update             # update epm to the latest release
+epm self-uninstall          # remove epm and everything it installed
 ```
 
 ## Configuration
 
-| Flag / Env Var | Description |
+| Env var | Description |
 |---|---|
-| `--registry <URL>` | Registry base URL (default: `http://localhost:3001`) |
-| `--token <TOKEN>` | Auth token for publish (or set `EPM_PUBLISH_TOKEN`) |
-| `EPM_PUBLISH_TOKEN` | Auth token for publish endpoint |
+| `EPM_REGISTRY` | Registry base URL (default: `https://epm.dev`) |
+| `EPM_PUBLISH_TOKEN` | Auth token for publishing packages |
 
 ## Development
 
@@ -59,6 +92,10 @@ epm uninstall todo
 cargo test
 ```
 
-## Registry
+## Related
 
-The registry server lives at [Slam-Dunk-Software/epm_registry](https://github.com/Slam-Dunk-Software/epm_registry).
+| | |
+|---|---|
+| [epc](https://github.com/Slam-Dunk-Software/epc) | Process supervisor — deploy and manage EPS services |
+| [epm_registry](https://github.com/Slam-Dunk-Software/epm_registry) | Registry server |
+| [eps_docs](https://github.com/Slam-Dunk-Software/eps_docs) | ADRs, concepts, and guides |
