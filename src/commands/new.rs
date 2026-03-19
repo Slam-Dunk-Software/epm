@@ -122,16 +122,17 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
 
     client.track_install(name, &version.version).await;
 
-    // Read the harness's eps.toml to find the start command (best-effort)
-    let start_cmd = std::fs::read_to_string(dest_path.join("eps.toml"))
+    // Read the harness's eps.toml to check if it's a deployable service
+    let is_service = std::fs::read_to_string(dest_path.join("eps.toml"))
         .ok()
         .and_then(|s| toml::from_str::<EpsManifest>(&s).ok())
-        .and_then(|m| if m.service.enabled { m.service.start } else { None });
+        .map(|m| m.service.enabled)
+        .unwrap_or(false);
 
     println!("\n\x1b[32m✓\x1b[0m Ready at \x1b[1m./{dest}/\x1b[0m");
-    if let Some(start) = start_cmd {
-        println!("\n  \x1b[2mRun it:\x1b[0m");
-        println!("    \x1b[36mcd {dest} && {start}\x1b[0m");
+    if is_service {
+        println!("\n  \x1b[2mDeploy it:\x1b[0m");
+        println!("    \x1b[36mcd {dest} && epc deploy\x1b[0m");
         println!("\n  \x1b[2mThen read\x1b[0m \x1b[1mCUSTOMIZE.md\x1b[0m \x1b[2mto make it yours.\x1b[0m");
     } else {
         println!("  \x1b[36mcd {dest} && cat CUSTOMIZE.md\x1b[0m");
