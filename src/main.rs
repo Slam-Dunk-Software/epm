@@ -20,7 +20,7 @@ const REGISTRY: &str = "https://epm.dev";
     name = "epm",
     version,
     about = "Extremely Personal Manager. A package manager for extremely personal software.",
-    after_help = "Experimental commands (adopt, sync, upgrade) are listed last — they work but aren't fully fleshed out yet."
+    after_help = "Experimental commands (adopt, sync, upgrade) are listed last. These may or may not work."
 )]
 struct Cli {
     /// Publish token (overrides EPM_PUBLISH_TOKEN env var)
