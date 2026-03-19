@@ -158,7 +158,7 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
     println!("\n\x1b[32m✓\x1b[0m Ready at \x1b[1m./{dest}/\x1b[0m");
     if is_service {
         println!("\n  \x1b[2mDeploy it:\x1b[0m");
-        println!("    \x1b[36mcd {dest} && epc deploy\x1b[0m");
+        println!("    \x1b[36mcd {dest} && epc serve\x1b[0m");
         println!("\n  \x1b[2mThen read\x1b[0m \x1b[1mCUSTOMIZE.md\x1b[0m \x1b[2mto make it yours.\x1b[0m");
     } else {
         println!("  \x1b[36mcd {dest} && cat CUSTOMIZE.md\x1b[0m");
