@@ -93,6 +93,32 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
         }
     }
 
+    // If the user gave a custom destination name, update the eps.toml package name to match.
+    // e.g. `epm new shell seeing_stone` → name = "seeing_stone" not "shell"
+    if dest != name {
+        let toml_path = dest_path.join("eps.toml");
+        if let Ok(contents) = std::fs::read_to_string(&toml_path) {
+            let updated = contents
+                .lines()
+                .map(|line| {
+                    let trimmed = line.trim();
+                    if trimmed.starts_with("name") {
+                        if let Some(rest) = trimmed.strip_prefix("name") {
+                            let after_eq = rest.trim_start_matches(|c: char| c.is_whitespace() || c == '=').trim();
+                            if after_eq.starts_with('"') {
+                                let indent = &line[..line.len() - line.trim_start().len()];
+                                return format!("{indent}name        = \"{dest}\"");
+                            }
+                        }
+                    }
+                    line.to_string()
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            let _ = std::fs::write(&toml_path, updated);
+        }
+    }
+
     // Strip upstream history — fresh slate
     std::fs::remove_dir_all(dest_path.join(".git"))
         .context("failed to remove upstream .git")?;
