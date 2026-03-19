@@ -90,7 +90,7 @@ echo ""
 # ── post-install setup ────────────────────────────────────────────────────────
 
 if [ "$QUIET" = "1" ]; then
-  printf "Run ${CYAN}epm new <harness>${RESET} to get started.\n"
+  printf "Run ${CYAN}epm runtime install epc${RESET} then ${CYAN}epm new <harness>${RESET} to get started.\n"
   exit 0
 fi
 
@@ -106,6 +106,13 @@ prompt() {
 
 printf "${BOLD}Would you like to set up a few extras?${RESET} (skip any with 'n')\n"
 
+# EPC runtime (most important — required to deploy EPS services)
+if prompt "  Install epc (process supervisor — runs your EPS services)?"; then
+  echo ""
+  epm runtime install epc
+  echo ""
+fi
+
 # MCP server
 if prompt "  Install eps_mcp (MCP knowledge server for Claude Code)?"; then
   echo ""
@@ -120,4 +127,5 @@ if prompt "  Install eps_skills (slash commands for Claude Code)?"; then
   echo ""
 fi
 
-printf "\n${GREEN}All done!${RESET} Run ${CYAN}epm new <harness>${RESET} to get started.\n"
+printf "\n${GREEN}All done!${RESET} Run ${CYAN}epm new <harness>${RESET} to deploy your first service.\n"
+printf "New to EPS? Start here: ${CYAN}https://epm.dev/docs/guides/getting-started${RESET}\n"
