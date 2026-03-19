@@ -16,7 +16,12 @@ use commands::skills::SkillsCommands;
 const REGISTRY: &str = "https://epm.dev";
 
 #[derive(Parser)]
-#[command(name = "epm", version, about = "Extremely Personal Manager. A package manager for extremely personal software.")]
+#[command(
+    name = "epm",
+    version,
+    about = "Extremely Personal Manager. A package manager for extremely personal software.",
+    after_help = "Experimental commands (adopt, sync, upgrade) are listed last — they work but aren't fully fleshed out yet."
+)]
 struct Cli {
     /// Publish token (overrides EPM_PUBLISH_TOKEN env var)
     #[arg(long, global = true)]
@@ -50,7 +55,8 @@ enum Commands {
         /// Package spec: <name> or <name@version>
         spec: String,
     },
-    /// Upgrade a package to the latest version from the registry
+    /// [experimental] Upgrade a package to the latest version from the registry
+    #[command(display_order = 1000)]
     Upgrade {
         /// Package name
         name: String,
@@ -82,7 +88,8 @@ enum Commands {
         #[arg(long)]
         no_git: bool,
     },
-    /// Adopt an EPS package into vendor/<name>/ as first-class source code
+    /// [experimental] Adopt an EPS package into vendor/<name>/ as first-class source code
+    #[command(display_order = 1001)]
     Adopt {
         /// Package spec: <name> or <name@version>
         spec: String,
@@ -92,7 +99,8 @@ enum Commands {
         /// Package name
         name: String,
     },
-    /// Check for upstream changes on an adopted package
+    /// [experimental] Check for upstream changes on an adopted package
+    #[command(display_order = 1002)]
     Sync {
         /// Package name
         name: String,
