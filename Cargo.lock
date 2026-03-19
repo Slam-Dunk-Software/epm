@@ -338,7 +338,7 @@ dependencies = [
 
 [[package]]
 name = "epm"
-version = "0.3.29"
+version = "0.3.31"
 dependencies = [
  "anyhow",
  "assert_cmd",
