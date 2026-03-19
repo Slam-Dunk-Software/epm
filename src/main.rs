@@ -1,5 +1,6 @@
 mod client;
 mod commands;
+mod credentials;
 mod installed;
 mod models;
 mod update_check;
@@ -125,15 +126,22 @@ enum Commands {
         #[arg(long, hide = true)]
         keep_binary: bool,
     },
+    /// Authenticate with the registry via GitHub OAuth
+    Login {
+        /// Skip browser and save this token directly
+        #[arg(long)]
+        token: Option<String>,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+    let registry = std::env::var("EPM_REGISTRY").unwrap_or_else(|_| REGISTRY.to_string());
     let token = cli.token
         .clone()
-        .or_else(|| std::env::var("EPM_PUBLISH_TOKEN").ok());
-    let registry = std::env::var("EPM_REGISTRY").unwrap_or_else(|_| REGISTRY.to_string());
+        .or_else(|| std::env::var("EPM_PUBLISH_TOKEN").ok())
+        .or_else(|| credentials::load(&registry).ok().flatten());
     let client = RegistryClient::new(&registry, token);
 
     match &cli.command {
@@ -188,11 +196,14 @@ async fn main() -> Result<()> {
         Commands::SelfUninstall { yes, keep_binary } => {
             commands::self_uninstall::run(*yes, *keep_binary)?;
         }
+        Commands::Login { token } => {
+            commands::login::run(&registry, token.as_deref()).await?;
+        }
     }
 
     // Skip update check after self-uninstall — ~/.epm/ was just removed and
     // update_check would recreate it via record_check().
-    if !matches!(&cli.command, Commands::SelfUninstall { .. }) {
+    if !matches!(&cli.command, Commands::SelfUninstall { .. } | Commands::Login { .. }) {
         update_check::check_and_warn().await;
     }
 
