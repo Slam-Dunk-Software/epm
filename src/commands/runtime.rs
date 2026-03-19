@@ -81,7 +81,6 @@ async fn install_epc() -> Result<()> {
 
     println!("\x1b[32m✓\x1b[0m \x1b[1mepc v{version}\x1b[0m \x1b[2minstalled to {}\x1b[0m",
         dest.display());
-    println!("  \x1b[2mMake sure {} is on your PATH.\x1b[0m", install_dir.display());
 
     Ok(())
 }
@@ -154,7 +153,6 @@ async fn install_tree_walker() -> Result<()> {
 
     println!("\x1b[32m✓\x1b[0m \x1b[1mtree_walker v{version}\x1b[0m \x1b[2minstalled to {}\x1b[0m",
         dest.display());
-    println!("  \x1b[2mMake sure {} is on your PATH.\x1b[0m", install_dir.display());
 
     Ok(())
 }
@@ -388,10 +386,7 @@ fn epc_asset_name() -> &'static str {
 }
 
 fn epc_install_dir() -> Result<std::path::PathBuf> {
-    Ok(dirs::home_dir()
-        .context("could not determine home directory")?
-        .join(".local")
-        .join("bin"))
+    Ok(std::path::PathBuf::from("/usr/local/bin"))
 }
 
 fn epc_binary_path() -> Result<std::path::PathBuf> {
