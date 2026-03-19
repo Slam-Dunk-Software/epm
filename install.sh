@@ -90,7 +90,6 @@ echo ""
 # ── post-install setup ────────────────────────────────────────────────────────
 
 if [ "$QUIET" = "1" ]; then
-  printf "Run ${CYAN}epm runtime install epc${RESET} then ${CYAN}epm new <harness>${RESET} to get started.\n"
   exit 0
 fi
 
