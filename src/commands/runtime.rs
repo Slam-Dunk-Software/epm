@@ -128,7 +128,7 @@ fn install_observatory() -> Result<()> {
         dest.display());
     println!();
     println!("  \x1b[2mDeploy it:\x1b[0m");
-    println!("    \x1b[36mcd ~/observatory && epc deploy .\x1b[0m");
+    println!("    \x1b[36mcd ~/observatory && epc serve .\x1b[0m");
     println!("  \x1b[2mThen read\x1b[0m \x1b[1mCUSTOMIZE.md\x1b[0m \x1b[2mto configure alerts.\x1b[0m");
 
     Ok(())
