@@ -122,16 +122,10 @@ if prompt "  Install epc (process supervisor — runs your EPS services)?"; then
   echo ""
 fi
 
-# MCP server
-if prompt "  Install eps_mcp (MCP knowledge server for Claude Code)?"; then
+# Docs + skills (installed together — skills read from docs)
+if prompt "  Install eps_skills and eps_docs (slash commands + EPS knowledge for Claude Code)?"; then
   echo ""
-  epm mcp install eps_mcp
-  echo ""
-fi
-
-# Skills
-if prompt "  Install eps_skills (slash commands for Claude Code)?"; then
-  echo ""
+  epm install eps_docs
   epm skills install eps_skills
   echo ""
 fi
