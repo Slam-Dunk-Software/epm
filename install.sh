@@ -113,22 +113,32 @@ prompt() {
   esac
 }
 
-printf "${BOLD}Would you like to set up a few extras?${RESET} (skip any with 'n')\n"
+printf "${BOLD}A few optional extras:${RESET}\n"
+echo ""
 
 # EPC runtime (most important — required to deploy EPS services)
-if prompt "  Install epc (process supervisor — runs your EPS services)?"; then
+printf "  ${BOLD}epc${RESET} — runs your EPS services as persistent background processes.\n"
+printf "  Required to use ${CYAN}epc serve${RESET}, ${CYAN}epc ps${RESET}, ${CYAN}epc logs${RESET}, etc.\n"
+if prompt "  Install epc?"; then
   echo ""
   epm runtime install epc
   echo ""
 fi
 
-# Docs + skills (installed together — skills read from docs)
-if prompt "  Install eps_skills and eps_docs (slash commands + EPS knowledge for Claude Code)?"; then
+echo ""
+
+# Docs + skills — only useful if the user has Claude Code
+printf "  ${BOLD}eps_docs + eps_skills${RESET} — EPS knowledge as Claude Code slash commands.\n"
+printf "  Adds ${CYAN}/eps${RESET}, ${CYAN}/eps-adr${RESET}, ${CYAN}/eps-toml${RESET}, ${CYAN}/eps-epc${RESET} and more.\n"
+if prompt "  Using Claude Code? Install eps_docs + eps_skills?"; then
   echo ""
   epm install eps_docs
   epm skills install eps_skills
   echo ""
 fi
 
-printf "\n${GREEN}All done!${RESET} Run ${CYAN}epm new <harness>${RESET} to deploy your first service.\n"
-printf "New to EPS? Start here: ${CYAN}https://epm.dev/docs/guides/getting-started${RESET}\n"
+printf "\n${GREEN}All done!${RESET}\n"
+printf "\nNext steps:\n"
+printf "  ${CYAN}epm new shell${RESET}   — clone the shell harness into a new directory\n"
+printf "  ${CYAN}cd shell && npm install && epc serve${RESET}   — start it\n"
+printf "\nNew to EPS? ${CYAN}https://epm.dev/docs/guides/getting-started${RESET}\n"
