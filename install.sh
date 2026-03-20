@@ -138,7 +138,5 @@ if prompt "  Using Claude Code? Install eps_docs + eps_skills?"; then
 fi
 
 printf "\n${GREEN}All done!${RESET}\n"
-printf "\nNext steps:\n"
-printf "  ${CYAN}epm new shell${RESET}   — clone the shell harness into a new directory\n"
-printf "  ${CYAN}cd shell && npm install && epc serve${RESET}   — start it\n"
-printf "\nNew to EPS? ${CYAN}https://epm.dev/docs/guides/getting-started${RESET}\n"
+printf "\nRun ${CYAN}epm help${RESET} to see available commands.\n"
+printf "New to EPS? ${CYAN}https://epm.dev/docs/guides/getting-started${RESET}\n"
