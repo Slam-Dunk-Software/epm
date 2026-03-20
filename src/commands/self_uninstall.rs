@@ -4,6 +4,9 @@
 //! - Removes tracked MCP servers from `~/.claude.json`
 //! - Deletes tracked skill files from `~/.claude/commands/`
 //! - Removes `~/.epm/`
+//! - Removes `~/.epc/` (epc state directory)
+//! - Removes the epc binary (if found on PATH)
+//! - Removes the epc startup service (LaunchAgent on macOS, systemd unit on Linux)
 //! - Removes the epm binary itself (unless `--keep-binary` is passed)
 
 use anyhow::{Context, Result};
@@ -72,6 +75,51 @@ pub fn run(yes: bool, keep_binary: bool) -> Result<()> {
             .with_context(|| format!("could not remove {}", epm_dir.display()))?;
     }
 
+    // ── remove epc binary ─────────────────────────────────────────────────────
+    let mut removed_epc_binary: Option<std::path::PathBuf> = None;
+    if let Ok(epc_path) = which::which("epc") {
+        if std::fs::remove_file(&epc_path).is_ok() {
+            removed_epc_binary = Some(epc_path);
+        }
+    }
+
+    // ── remove ~/.epc/ state directory ───────────────────────────────────────
+    let epc_dir = home.join(".epc");
+    let removed_epc_dir = if epc_dir.exists() {
+        std::fs::remove_dir_all(&epc_dir).is_ok()
+    } else {
+        false
+    };
+
+    // ── remove epc startup service ────────────────────────────────────────────
+    #[cfg(target_os = "macos")]
+    {
+        let plist = home
+            .join("Library")
+            .join("LaunchAgents")
+            .join("com.eps.epc-startup.plist");
+        if plist.exists() {
+            let _ = std::process::Command::new("launchctl")
+                .args(["unload", &plist.to_string_lossy()])
+                .status();
+            let _ = std::fs::remove_file(&plist);
+        }
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let unit = home
+            .join(".config")
+            .join("systemd")
+            .join("user")
+            .join("epc-startup.service");
+        if unit.exists() {
+            let _ = std::process::Command::new("systemctl")
+                .args(["--user", "disable", "--now", "epc-startup"])
+                .status();
+            let _ = std::fs::remove_file(&unit);
+        }
+    }
+
     // ── print summary ─────────────────────────────────────────────────────────
     println!();
     if !removed_mcps.is_empty() {
@@ -85,6 +133,12 @@ pub fn run(yes: bool, keep_binary: bool) -> Result<()> {
         }
     }
     println!("\x1b[31m✕\x1b[0m \x1b[2m~/.epm/\x1b[0m deleted");
+    if let Some(epc_bin) = &removed_epc_binary {
+        println!("\x1b[31m✕\x1b[0m \x1b[2m{}\x1b[0m deleted", epc_bin.display());
+    }
+    if removed_epc_dir {
+        println!("\x1b[31m✕\x1b[0m \x1b[2m~/.epc/\x1b[0m deleted");
+    }
 
     // ── remove the binary (last — we're still running from it) ────────────────
     if !keep_binary {

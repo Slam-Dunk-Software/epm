@@ -12,6 +12,28 @@ fn epm(args: &[&str], home: &TempDir) -> assert_cmd::assert::Assert {
         .assert()
 }
 
+fn epm_with_path(args: &[&str], home: &TempDir, path: &str) -> assert_cmd::assert::Assert {
+    Command::cargo_bin("epm")
+        .unwrap()
+        .args(args)
+        .env("HOME", home.path())
+        .env("PATH", path)
+        .assert()
+}
+
+fn setup_fake_epc_binary(home: &TempDir) -> std::path::PathBuf {
+    let bin_dir = home.path().join("bin");
+    fs::create_dir_all(&bin_dir).unwrap();
+    let epc_path = bin_dir.join("epc");
+    fs::write(&epc_path, "#!/bin/sh\necho 'epc 0.1.0'\n").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&epc_path, fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    bin_dir
+}
+
 fn write_claude_json(home: &TempDir, content: &serde_json::Value) {
     let path = home.path().join(".claude.json");
     fs::write(path, serde_json::to_string_pretty(content).unwrap()).unwrap();
@@ -175,4 +197,90 @@ files = ["{semver_path}"]
 
     assert!(stdout.contains("eps_mcp"), "should mention removed MCP");
     assert!(stdout.contains("eps_skills"), "should mention removed skills");
+}
+
+// ── epc / runtime cleanup ─────────────────────────────────────────────────────
+
+#[test]
+fn self_uninstall_removes_epc_binary() {
+    let home = TempDir::new().unwrap();
+    let bin_dir = setup_fake_epc_binary(&home);
+    write_installed_toml(&home, "");
+
+    let path = format!("{}:/usr/local/bin:/usr/bin:/bin", bin_dir.display());
+    epm_with_path(&["self-uninstall", "--yes", "--keep-binary"], &home, &path).success();
+
+    assert!(!bin_dir.join("epc").exists(), "epc binary should be removed");
+}
+
+#[test]
+fn self_uninstall_removes_epc_state_dir() {
+    let home = TempDir::new().unwrap();
+    write_installed_toml(&home, "");
+
+    let epc_dir = home.path().join(".epc");
+    fs::create_dir_all(&epc_dir).unwrap();
+    fs::write(epc_dir.join("services.toml"), "[services]\n").unwrap();
+
+    epm(&["self-uninstall", "--yes", "--keep-binary"], &home).success();
+
+    assert!(!epc_dir.exists(), "~/.epc/ should be removed");
+}
+
+#[cfg(target_os = "macos")]
+#[test]
+fn self_uninstall_removes_epc_launchagent() {
+    let home = TempDir::new().unwrap();
+    write_installed_toml(&home, "");
+
+    let agents_dir = home.path().join("Library").join("LaunchAgents");
+    fs::create_dir_all(&agents_dir).unwrap();
+    let plist = agents_dir.join("com.eps.epc-startup.plist");
+    fs::write(&plist, "<?xml version=\"1.0\"?>\n<plist></plist>").unwrap();
+
+    epm(&["self-uninstall", "--yes", "--keep-binary"], &home).success();
+
+    assert!(!plist.exists(), "LaunchAgent plist should be removed");
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn self_uninstall_removes_epc_systemd_unit() {
+    let home = TempDir::new().unwrap();
+    write_installed_toml(&home, "");
+
+    let systemd_dir = home.path().join(".config").join("systemd").join("user");
+    fs::create_dir_all(&systemd_dir).unwrap();
+    let unit = systemd_dir.join("epc-startup.service");
+    fs::write(&unit, "[Unit]\nDescription=EPC\n").unwrap();
+
+    epm(&["self-uninstall", "--yes", "--keep-binary"], &home).success();
+
+    assert!(!unit.exists(), "systemd unit file should be removed");
+}
+
+#[test]
+fn self_uninstall_succeeds_when_epc_not_installed() {
+    let home = TempDir::new().unwrap();
+    write_installed_toml(&home, "");
+    // No epc binary on PATH, no ~/.epc/ — should not panic
+    epm_with_path(&["self-uninstall", "--yes", "--keep-binary"], &home, "/nonexistent").success();
+}
+
+#[test]
+fn self_uninstall_prints_epc_state_removed() {
+    let home = TempDir::new().unwrap();
+    write_installed_toml(&home, "");
+
+    let epc_dir = home.path().join(".epc");
+    fs::create_dir_all(&epc_dir).unwrap();
+
+    let out = epm(&["self-uninstall", "--yes", "--keep-binary"], &home)
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let stdout = String::from_utf8(out).unwrap();
+
+    assert!(stdout.contains(".epc"), "should mention ~/.epc/ removal");
 }
