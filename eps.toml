@@ -1,11 +1,11 @@
 [package]
 name        = "epm"
-version     = "0.3.34"
+version     = "0.3.35"
 description = "The CLI for the EPS ecosystem — publish, search, and install personal software packages."
 authors     = ["nickagliano"]
 license     = "MIT"
 repository  = "https://github.com/Slam-Dunk-Software/epm"
-platform    = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu"]
+platform    = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
 
 [service]
 enabled = false

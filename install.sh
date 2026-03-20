@@ -40,9 +40,19 @@ case "$OS" in
     ;;
   Linux)
     case "$ARCH" in
-      x86_64) TARGET="x86_64-unknown-linux-gnu" ;;
-      *)      echo "Unsupported Linux architecture: $ARCH"; exit 1 ;;
+      x86_64)  TARGET="x86_64-unknown-linux-gnu" ;;
+      aarch64) TARGET="aarch64-unknown-linux-gnu" ;;
+      *)
+        echo "Unsupported Linux architecture: $ARCH"
+        echo "Try installing from source: cargo install --git https://github.com/$REPO"
+        exit 1
+        ;;
     esac
+    ;;
+  MINGW*|MSYS*|CYGWIN*|Windows_NT)
+    echo "Windows is not natively supported."
+    echo "Install WSL2 (https://learn.microsoft.com/en-us/windows/wsl/install) and run this script from there."
+    exit 1
     ;;
   *)
     echo "Unsupported OS: $OS"
