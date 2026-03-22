@@ -57,14 +57,6 @@ epm services audit                  # check services for insecure network bindin
 epm services observatory rm <name>  # remove a stale entry from the Observatory database
 ```
 
-### Runtime
-
-```sh
-epm runtime install         # scaffold observatory + install tree_walker
-epm runtime upgrade         # upgrade tree_walker to latest release
-epm runtime status          # show installed vs latest versions
-```
-
 ### MCP servers
 
 ```sh

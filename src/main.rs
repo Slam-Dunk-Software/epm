@@ -11,7 +11,6 @@ use clap::{Parser, Subcommand};
 
 use client::RegistryClient;
 use commands::mcp::McpCommands;
-use commands::runtime::RuntimeCommands;
 use commands::services::ServicesCommands;
 use commands::skills::SkillsCommands;
 
@@ -115,11 +114,6 @@ enum Commands {
         #[command(subcommand)]
         command: ServicesCommands,
     },
-    /// Manage the EPS runtime (observatory + tree_walker)
-    Runtime {
-        #[command(subcommand)]
-        command: RuntimeCommands,
-    },
     /// Install, list, and remove MCP servers in ~/.claude.json
     Mcp {
         #[command(subcommand)]
@@ -198,9 +192,6 @@ async fn main() -> Result<()> {
         }
         Commands::Services { command } => {
             commands::services::run(command).await?;
-        }
-        Commands::Runtime { command } => {
-            commands::runtime::run(command).await?;
         }
         Commands::Mcp { command } => {
             commands::mcp::run(command, &client).await?;

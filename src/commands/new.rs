@@ -19,7 +19,6 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
         Err(e) => return Err(e),
     };
 
-    if pkg.is_epm_core() { crate::commands::guard_epm_core(name); }
     check_platform(&pkg.platforms, name)?;
 
     let version = if let Some(ver) = pinned_version {
