@@ -17,11 +17,70 @@ pub struct EpsManifest {
     #[serde(default)]
     pub hooks: EpsHooks,
     #[serde(default)]
-    pub service: EpsService,
+    pub service: Option<EpsService>,
     #[serde(default)]
     pub skills: EpsSkills,
     #[serde(default)]
     pub mcp: EpsMcp,
+}
+
+impl EpsManifest {
+    /// Parse an eps.toml file from disk.
+    pub fn from_file(path: &std::path::Path) -> anyhow::Result<Self> {
+        use anyhow::Context as _;
+        let raw = std::fs::read_to_string(path)
+            .with_context(|| format!("failed to read {}", path.display()))?;
+        toml::from_str(&raw).map_err(|e| {
+            let msg = e.to_string();
+            if msg.contains("missing field `package`") {
+                anyhow::anyhow!(
+                    "failed to parse {}: must start with a [package] section",
+                    path.display()
+                )
+            } else {
+                anyhow::anyhow!("failed to parse {}: {msg}", path.display())
+            }
+        })
+    }
+
+    /// Return a validated [`EpsServiceConfig`], or an error if:
+    /// - no `[service]` block exists
+    /// - `enabled = false`
+    /// - `start` or `port` is missing
+    pub fn require_service(&self) -> anyhow::Result<EpsServiceConfig> {
+        use anyhow::bail;
+        let svc = self.service.as_ref().ok_or_else(|| {
+            anyhow::anyhow!(
+                "'{}' has no [service] block in eps.toml — not deployable via epm services",
+                self.package.name
+            )
+        })?;
+        if !svc.enabled {
+            bail!(
+                "'{}' has a [service] block but enabled = false",
+                self.package.name
+            );
+        }
+        let start = svc.start.clone().ok_or_else(|| {
+            anyhow::anyhow!(
+                "'{}' [service] block is missing 'start'",
+                self.package.name
+            )
+        })?;
+        let port = svc.port.ok_or_else(|| {
+            anyhow::anyhow!(
+                "'{}' [service] block is missing 'port'",
+                self.package.name
+            )
+        })?;
+        Ok(EpsServiceConfig {
+            enabled: svc.enabled,
+            startup: svc.startup,
+            start,
+            port,
+            health_check: svc.health_check.clone(),
+        })
+    }
 }
 
 /// Optional `[skills]` section — declares Claude Code slash command files.
@@ -69,8 +128,28 @@ pub struct EpsHooks {
 pub struct EpsService {
     #[serde(default)]
     pub enabled: bool,
+    /// Whether `epm services startup` should restart this service on login.
+    /// Defaults to true. Set `startup = false` in eps.toml to exclude from auto-start.
+    #[serde(default = "default_true")]
+    pub startup: bool,
     pub start: Option<String>,
     pub port: Option<u16>,
+    pub health_check: Option<String>,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+/// Validated service configuration returned by [`EpsManifest::require_service`].
+/// All fields are non-optional — `require_service` has verified start and port are present.
+#[derive(Debug, Clone)]
+pub struct EpsServiceConfig {
+    pub enabled: bool,
+    pub startup: bool,
+    pub start: String,
+    pub port: u16,
+    pub health_check: Option<String>,
 }
 
 /// Optional `[mcp]` section — present when the package is an MCP server.

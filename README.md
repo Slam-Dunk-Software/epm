@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Slam-Dunk-Software/epm/actions/workflows/ci.yml/badge.svg)](https://github.com/Slam-Dunk-Software/epm/actions/workflows/ci.yml)
 
-The CLI for the [EPS](https://github.com/Slam-Dunk-Software/eps_docs) ecosystem — publish, search, and install personal software packages.
+The CLI for the [EPS](https://github.com/Slam-Dunk-Software/eps_docs) ecosystem — publish, search, install, and run personal software packages.
 
 ## Installation
 
@@ -38,12 +38,30 @@ epm new todo                # scaffold a harness into ./todo/ (yours to customiz
 epm new todo my-tasks       # custom directory name
 ```
 
+### Services
+
+```sh
+epm services serve                  # deploy current directory as a service
+epm services serve <name>           # deploy an installed package
+epm services serve --local <path>   # deploy from an explicit path
+epm services ps                     # list running services
+epm services logs <name>            # tail logs for a service
+epm services stop <name>            # stop a service
+epm services restart <name>         # restart a service (picks up source changes)
+epm services remove <name>          # stop + remove a service entirely
+epm services prune                  # remove services whose directories no longer exist
+epm services sync                   # repair services.toml from the persistent registry
+epm services startup                # restart all registered services (used at login)
+epm services install-startup        # install a LaunchAgent/systemd unit for auto-start
+epm services audit                  # check services for insecure network bindings
+epm services observatory rm <name>  # remove a stale entry from the Observatory database
+```
+
 ### Runtime
 
 ```sh
-epm runtime install         # install epc + scaffold observatory
-epm runtime install epc     # just epc
-epm runtime upgrade epc     # upgrade epc to latest release
+epm runtime install         # scaffold observatory + install tree_walker
+epm runtime upgrade         # upgrade tree_walker to latest release
 epm runtime status          # show installed vs latest versions
 ```
 
@@ -96,6 +114,5 @@ cargo test
 
 | | |
 |---|---|
-| [epc](https://github.com/Slam-Dunk-Software/epc) | Process supervisor — deploy and manage EPS services |
 | [epm_registry](https://github.com/Slam-Dunk-Software/epm_registry) | Registry server |
 | [eps_docs](https://github.com/Slam-Dunk-Software/eps_docs) | ADRs, concepts, and guides |

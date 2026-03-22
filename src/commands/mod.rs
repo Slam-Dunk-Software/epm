@@ -1,4 +1,5 @@
 pub mod adopt;
+pub mod services;
 pub mod login;
 pub mod open;
 pub mod self_uninstall;

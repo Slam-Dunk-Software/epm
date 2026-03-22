@@ -202,7 +202,9 @@ files = ["{semver_path}"]
 // ── epc / runtime cleanup ─────────────────────────────────────────────────────
 
 #[test]
-fn self_uninstall_removes_epc_binary() {
+fn self_uninstall_succeeds_with_epc_binary_present() {
+    // epc is no longer managed by epm — a stray epc binary on PATH should not
+    // cause self-uninstall to fail (it is simply ignored).
     let home = TempDir::new().unwrap();
     let bin_dir = setup_fake_epc_binary(&home);
     write_installed_toml(&home, "");
@@ -210,7 +212,8 @@ fn self_uninstall_removes_epc_binary() {
     let path = format!("{}:/usr/local/bin:/usr/bin:/bin", bin_dir.display());
     epm_with_path(&["self-uninstall", "--yes", "--keep-binary"], &home, &path).success();
 
-    assert!(!bin_dir.join("epc").exists(), "epc binary should be removed");
+    // epc binary is left untouched — epm no longer removes it
+    assert!(bin_dir.join("epc").exists(), "epc binary should be left alone");
 }
 
 #[test]

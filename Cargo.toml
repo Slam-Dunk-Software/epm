@@ -26,6 +26,10 @@ strsim     = "0.11"
 which      = "6"
 open       = "5"
 rand       = "0.8"
+rusqlite           = { version = "0.31", features = ["bundled"] }
+chrono             = { version = "0.4", features = ["serde"] }
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 [dev-dependencies]
 wiremock   = "0.6"

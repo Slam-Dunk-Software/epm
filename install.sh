@@ -113,18 +113,7 @@ prompt() {
   esac
 }
 
-printf "${BOLD}A few optional extras:${RESET}\n"
-echo ""
-
-# EPC runtime (most important — required to deploy EPS services)
-printf "  ${BOLD}epc${RESET} — runs your EPS services as persistent background processes.\n"
-printf "  Required to use ${CYAN}epc serve${RESET}, ${CYAN}epc ps${RESET}, ${CYAN}epc logs${RESET}, etc.\n"
-if prompt "  Install epc?"; then
-  echo ""
-  epm runtime install epc
-  echo ""
-fi
-
+printf "${BOLD}One optional extra:${RESET}\n"
 echo ""
 
 # Docs + skills — only useful if the user has Claude Code
@@ -138,5 +127,6 @@ if prompt "  Using Claude Code? Install eps_docs + eps_skills?"; then
 fi
 
 printf "\n${GREEN}All done!${RESET}\n"
-printf "\nRun ${CYAN}epm help${RESET} to see available commands.\n"
+printf "\nRun ${CYAN}epm services serve${RESET} inside any EPS project to deploy it.\n"
+printf "Run ${CYAN}epm help${RESET} to see all available commands.\n"
 printf "New to EPS? ${CYAN}https://epm.dev/docs/guides/getting-started${RESET}\n"

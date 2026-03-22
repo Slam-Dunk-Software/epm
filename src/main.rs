@@ -3,6 +3,7 @@ mod commands;
 mod credentials;
 mod installed;
 mod models;
+mod services;
 mod update_check;
 
 use anyhow::Result;
@@ -11,6 +12,7 @@ use clap::{Parser, Subcommand};
 use client::RegistryClient;
 use commands::mcp::McpCommands;
 use commands::runtime::RuntimeCommands;
+use commands::services::ServicesCommands;
 use commands::skills::SkillsCommands;
 
 const REGISTRY: &str = "https://epm.dev";
@@ -108,7 +110,12 @@ enum Commands {
         #[arg(long)]
         wipe: bool,
     },
-    /// Manage the EPS runtime (epc + observatory)
+    /// Deploy and manage EPS services (serve, ps, stop, restart, logs, startup, …)
+    Services {
+        #[command(subcommand)]
+        command: ServicesCommands,
+    },
+    /// Manage the EPS runtime (observatory + tree_walker)
     Runtime {
         #[command(subcommand)]
         command: RuntimeCommands,
@@ -188,6 +195,9 @@ async fn main() -> Result<()> {
         }
         Commands::Sync { name, wipe } => {
             commands::sync::run(&client, name, *wipe).await?;
+        }
+        Commands::Services { command } => {
+            commands::services::run(command).await?;
         }
         Commands::Runtime { command } => {
             commands::runtime::run(command).await?;
