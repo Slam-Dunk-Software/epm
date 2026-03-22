@@ -32,6 +32,7 @@ pub fn run_internal(state_path: &Path, db_path: &Path, confirm: Option<bool>) ->
 
     if stale.is_empty() {
         println!("\x1b[32m✓\x1b[0m  no stale services found");
+        prune_orphaned_observatory_entries(&services, db_path).ok();
         return Ok(());
     }
 
@@ -95,6 +96,29 @@ pub fn run_internal(state_path: &Path, db_path: &Path, confirm: Option<bool>) ->
     }
 
     services.save()?;
+
+    // Sweep observatory for entries with no matching service in services.toml
+    prune_orphaned_observatory_entries(&services, db_path).ok();
+
+    Ok(())
+}
+
+fn prune_orphaned_observatory_entries(services: &ServicesFile, db_path: &Path) -> Result<()> {
+    if !db_path.exists() {
+        return Ok(());
+    }
+    let conn = rusqlite::Connection::open(db_path)?;
+    let mut stmt = conn.prepare("SELECT DISTINCT service FROM service_state")?;
+    let obs_names: Vec<String> = stmt
+        .query_map([], |row| row.get(0))?
+        .filter_map(|r| r.ok())
+        .collect();
+    for name in obs_names {
+        if !services.services.contains_key(&name) {
+            conn.execute("DELETE FROM service_state WHERE service = ?1", rusqlite::params![name])?;
+            conn.execute("DELETE FROM health_checks WHERE service = ?1", rusqlite::params![name])?;
+        }
+    }
     Ok(())
 }
 
@@ -176,6 +200,35 @@ mod tests {
         sf.save().unwrap();
         run_internal(&state_path, &dir.path().join("o.db"), Some(true)).unwrap();
         assert!(!std::path::Path::new(&log_path).exists());
+    }
+
+    #[test]
+    fn prune_removes_orphaned_observatory_entries() {
+        let dir = TempDir::new().unwrap();
+        let state_path = dir.path().join("services.toml");
+        let db_path = dir.path().join("observatory.db");
+
+        // observatory has an entry but services.toml does not
+        {
+            use rusqlite::Connection;
+            let conn = Connection::open(&db_path).unwrap();
+            conn.execute_batch(
+                "CREATE TABLE service_state (service TEXT PRIMARY KEY, last_status TEXT, last_checked TEXT, repo_url TEXT);
+                 CREATE TABLE health_checks (id INTEGER PRIMARY KEY AUTOINCREMENT, service TEXT, checked_at TEXT, status TEXT, response_ms INTEGER, status_code INTEGER);",
+            ).unwrap();
+            conn.execute("INSERT INTO service_state VALUES ('orphan', 'stopped', '2026-01-01', NULL)", []).unwrap();
+        }
+
+        run_internal(&state_path, &db_path, Some(true)).unwrap();
+
+        use rusqlite::Connection;
+        let conn = Connection::open(&db_path).unwrap();
+        let count: usize = conn.query_row(
+            "SELECT COUNT(*) FROM service_state WHERE service = 'orphan'",
+            [],
+            |row| row.get(0),
+        ).unwrap();
+        assert_eq!(count, 0, "orphaned observatory entry should be pruned");
     }
 
     #[test]
