@@ -18,7 +18,7 @@ pub fn run() -> Result<()> {
 
     if registry.services.is_empty() {
         println!("~/.epc/registry.toml is empty — nothing to sync.");
-        println!("Run `epm services serve` inside a project directory to register a service.");
+        println!("Run `epm services start` inside a project directory to register a service.");
         return Ok(());
     }
 

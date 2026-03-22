@@ -9,7 +9,7 @@ pub async fn run() -> Result<()> {
 
     if registry.services.is_empty() {
         println!("No services in ~/.epc/registry.toml. Nothing to start.");
-        println!("Run `epm services serve` inside a project directory to register a service.");
+        println!("Run `epm services start` inside a project directory to register a service.");
         return Ok(());
     }
 
@@ -60,7 +60,7 @@ pub async fn run() -> Result<()> {
             continue;
         }
 
-        match crate::commands::services::serve::run(None, Some(&dir)).await {
+        match crate::commands::services::start::run(None, Some(&dir)).await {
             Ok(()) => started += 1,
             Err(e) => {
                 eprintln!("  \x1b[31m✗ {name}: {e}\x1b[0m");

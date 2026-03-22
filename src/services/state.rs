@@ -124,7 +124,7 @@ impl ServicesFile {
 // ── RegistryFile ──────────────────────────────────────────────────────────────
 //
 // ~/.epc/registry.toml — a persistent record of every EPS project directory
-// ever handed to `epm services serve`. Unlike services.toml (which is live
+// ever handed to `epm services start`. Unlike services.toml (which is live
 // state that gets wiped or repaired frequently), registry.toml is append-only:
 // entries are only removed when the user explicitly asks (remove / prune).
 

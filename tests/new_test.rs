@@ -46,6 +46,7 @@ fn epm_new(registry: &str, home: &TempDir, args: &[&str]) -> assert_cmd::assert:
         .args(["new"].iter().chain(args.iter()).copied().collect::<Vec<_>>())
         .env("EPM_REGISTRY", registry)
         .env("HOME", home.path())
+        .env("EPM_HOME", home.path())
         .env("GIT_AUTHOR_NAME", "EPM Test")
         .env("GIT_AUTHOR_EMAIL", "test@epm.test")
         .env("GIT_COMMITTER_NAME", "EPM Test")

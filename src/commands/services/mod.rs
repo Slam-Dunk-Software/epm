@@ -6,7 +6,7 @@ pub mod prune;
 pub mod ps;
 pub mod remove;
 pub mod restart;
-pub mod serve;
+pub mod start;
 pub mod startup;
 pub mod stop;
 pub mod sync;
@@ -18,7 +18,7 @@ use clap::Subcommand;
 pub enum ServicesCommands {
     /// Start an EPS service from a project directory (or installed package).
     /// Run from inside a project directory with no arguments to serve it locally.
-    Serve {
+    Start {
         /// Package name (looks up in ~/.epm/packages/). Omit when inside a project
         /// directory — epm will detect the eps.toml and serve it automatically.
         spec: Option<String>,
@@ -84,8 +84,8 @@ pub enum ObservatoryCommands {
 
 pub async fn run(cmd: &ServicesCommands) -> Result<()> {
     match cmd {
-        ServicesCommands::Serve { spec, local } => {
-            serve::run(spec.as_deref(), local.as_deref()).await?
+        ServicesCommands::Start { spec, local } => {
+            start::run(spec.as_deref(), local.as_deref()).await?
         }
         ServicesCommands::Ps => ps::run().await?,
         ServicesCommands::Logs { name } => logs::run(name).await?,

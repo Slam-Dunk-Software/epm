@@ -127,6 +127,6 @@ if prompt "  Using Claude Code? Install eps_docs + eps_skills?"; then
 fi
 
 printf "\n${GREEN}All done!${RESET}\n"
-printf "\nRun ${CYAN}epm services serve${RESET} inside any EPS project to deploy it.\n"
+printf "\nRun ${CYAN}epm services start${RESET} inside any EPS project to deploy it.\n"
 printf "Run ${CYAN}epm help${RESET} to see all available commands.\n"
 printf "New to EPS? ${CYAN}https://epm.dev/docs/guides/getting-started${RESET}\n"

@@ -30,9 +30,9 @@ pub fn resolve_package_dir_inner(
             "no eps.toml found in the current directory\n\
              \n\
              Usage:\n\
-             \tepm services serve                    # inside a project directory\n\
-             \tepm services serve --local <path>     # explicit local path\n\
-             \tepm services serve <package-name>     # installed via epm"
+             \tepm services start                    # inside a project directory\n\
+             \tepm services start --local <path>     # explicit local path\n\
+             \tepm services start <package-name>     # installed via epm"
         );
     }
 
@@ -52,8 +52,8 @@ pub fn resolve_package_dir_inner(
             "package '{spec}' is not installed\n\
              \n\
              Did you mean to deploy a local project? Try:\n\
-             \tepm services serve --local <path>   # e.g. epm services serve --local ./my-project\n\
-             \tepm services serve                  # from inside the project directory\n\
+             \tepm services start --local <path>   # e.g. epm services start --local ./my-project\n\
+             \tepm services start                  # from inside the project directory\n\
              \n\
              Or install it first with:  epm install {spec}"
         );
@@ -155,7 +155,7 @@ pub async fn run(spec: Option<&str>, local: Option<&Path>) -> Result<()> {
             }
         }
         eprintln!("\n  \x1b[2mFull logs:\x1b[0m \x1b[36m{}\x1b[0m", log_path.display());
-        eprintln!("  \x1b[2mFix the error above, then run\x1b[0m \x1b[36mepm services serve\x1b[0m \x1b[2magain.\x1b[0m");
+        eprintln!("  \x1b[2mFix the error above, then run\x1b[0m \x1b[36mepm services start\x1b[0m \x1b[2magain.\x1b[0m");
         std::process::exit(1);
     }
 

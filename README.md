@@ -41,9 +41,9 @@ epm new todo my-tasks       # custom directory name
 ### Services
 
 ```sh
-epm services serve                  # deploy current directory as a service
-epm services serve <name>           # deploy an installed package
-epm services serve --local <path>   # deploy from an explicit path
+epm services start                  # deploy current directory as a service
+epm services start <name>           # deploy an installed package
+epm services start --local <path>   # deploy from an explicit path
 epm services ps                     # list running services
 epm services logs <name>            # tail logs for a service
 epm services stop <name>            # stop a service
