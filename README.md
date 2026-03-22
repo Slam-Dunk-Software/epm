@@ -93,6 +93,7 @@ epm self-uninstall          # remove epm and everything it installed
 
 | Env var | Description |
 |---|---|
+| `EPM_HOME` | Root directory for scaffolded harnesses (default: `~/eps`) |
 | `EPM_REGISTRY` | Registry base URL (default: `https://epm.dev`) |
 | `EPM_PUBLISH_TOKEN` | Auth token for publishing packages |
 

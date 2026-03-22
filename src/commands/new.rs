@@ -6,6 +6,14 @@ use crate::client::RegistryClient;
 use crate::commands::install::{check_platform, parse_spec, select_latest_version};
 use crate::models::EpsManifest;
 
+fn epm_home() -> Result<std::path::PathBuf> {
+    if let Ok(val) = std::env::var("EPM_HOME") {
+        return Ok(std::path::PathBuf::from(val));
+    }
+    let home = dirs::home_dir().context("could not determine home directory")?;
+    Ok(home.join("eps"))
+}
+
 pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: bool) -> Result<()> {
     let (name, pinned_version) = parse_spec(spec);
 
@@ -31,8 +39,15 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
             .ok_or_else(|| anyhow::anyhow!("no installable versions available for '{name}'"))?
     };
 
-    let dest = dir.unwrap_or(name);
-    let dest_path = std::path::Path::new(dest);
+    let dest_name = dir.unwrap_or(name);
+    let dest_path = if std::path::Path::new(dest_name).is_absolute() {
+        std::path::PathBuf::from(dest_name)
+    } else {
+        let home = epm_home()?;
+        std::fs::create_dir_all(&home)
+            .with_context(|| format!("failed to create EPM_HOME directory at {}", home.display()))?;
+        home.join(dest_name)
+    };
 
     if dest_path.exists() {
         bail!("destination '{}' already exists", dest_path.display());
@@ -43,11 +58,13 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
         bail!("git is required but was not found.\nInstall it from https://git-scm.com/downloads and try again.");
     }
 
-    println!("\x1b[2mCreating \x1b[0m\x1b[1m{dest}\x1b[0m\x1b[2m from {name}@{}...\x1b[0m", version.version);
+    let dest_str = dest_path.to_string_lossy().into_owned();
+
+    println!("\x1b[2mCreating \x1b[0m\x1b[1m{dest_name}\x1b[0m\x1b[2m from {name}@{}...\x1b[0m", version.version);
 
     // Clone the harness
     let clone_ok = Command::new("git")
-        .args(["clone", "--quiet", &version.git_url, dest])
+        .args(["clone", "--quiet", &version.git_url, &dest_str])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
@@ -55,12 +72,12 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
         .success();
 
     if !clone_ok {
-        bail!("git clone failed — check your internet connection and try again.\nIf the problem persists, try: git clone {} {}", version.git_url, dest);
+        bail!("git clone failed — check your internet connection and try again.\nIf the problem persists, try: git clone {} {}", version.git_url, dest_str);
     }
 
     // Checkout the exact published commit (suppress detached HEAD advice)
     let checkout_ok = Command::new("git")
-        .args(["-C", dest, "-c", "advice.detachedHead=false", "checkout", &version.commit_sha])
+        .args(["-C", &dest_str, "-c", "advice.detachedHead=false", "checkout", &version.commit_sha])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
@@ -76,7 +93,7 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
         if let Ok(s) = std::fs::read_to_string(dest_path.join("eps.toml")) {
             if let Ok(m) = toml::from_str::<EpsManifest>(&s) {
                 if m.eps.package_type.as_deref() == Some("tool") {
-                    std::fs::remove_dir_all(dest_path).ok();
+                    std::fs::remove_dir_all(&dest_path).ok();
                     let alt = if m.mcp.binary.is_some() {
                         format!("epm mcp install {name}")
                     } else {
@@ -94,7 +111,7 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
 
     // If the user gave a custom destination name, update the eps.toml package name to match.
     // e.g. `epm new shell seeing_stone` → name = "seeing_stone" not "shell"
-    if dest != name {
+    if dest_name != name {
         let toml_path = dest_path.join("eps.toml");
         if let Ok(contents) = std::fs::read_to_string(&toml_path) {
             let updated = contents
@@ -106,7 +123,7 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
                             let after_eq = rest.trim_start_matches(|c: char| c.is_whitespace() || c == '=').trim();
                             if after_eq.starts_with('"') {
                                 let indent = &line[..line.len() - line.trim_start().len()];
-                                return format!("{indent}name        = \"{dest}\"");
+                                return format!("{indent}name        = \"{dest_name}\"");
                             }
                         }
                     }
@@ -124,20 +141,20 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
 
     // New git repo
     Command::new("git")
-        .args(["init", dest])
+        .args(["init", &dest_str])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()?;
 
     Command::new("git")
-        .args(["-C", dest, "add", "."])
+        .args(["-C", &dest_str, "add", "."])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()?;
 
     Command::new("git")
         .args([
-            "-C", dest,
+            "-C", &dest_str,
             "commit", "-m",
             &format!("Initial commit (epm new {name}@{})", version.version),
         ])
@@ -154,13 +171,13 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
         .map(|m| m.service.map(|s| s.enabled).unwrap_or(false))
         .unwrap_or(false);
 
-    println!("\n\x1b[32m✓\x1b[0m Ready at \x1b[1m./{dest}/\x1b[0m");
+    println!("\n\x1b[32m✓\x1b[0m Ready at \x1b[1m{dest_str}/\x1b[0m");
     if is_service {
         println!("\n  \x1b[2mDeploy it:\x1b[0m");
-        println!("    \x1b[36mcd {dest} && epm services serve\x1b[0m");
+        println!("    \x1b[36mcd {dest_str} && epm services serve\x1b[0m");
         println!("\n  \x1b[2mThen read\x1b[0m \x1b[1mCUSTOMIZE.md\x1b[0m \x1b[2mto make it yours.\x1b[0m");
     } else {
-        println!("  \x1b[36mcd {dest} && cat CUSTOMIZE.md\x1b[0m");
+        println!("  \x1b[36mcd {dest_str} && cat CUSTOMIZE.md\x1b[0m");
     }
 
     Ok(())
