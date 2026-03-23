@@ -9,7 +9,7 @@ use crate::{
 
 /// Repair services.toml from the persistent registry.
 ///
-/// Scans every project dir recorded in ~/.epc/registry.toml, checks which
+/// Scans every project dir recorded in ~/.epm/services/registry.toml, checks which
 /// services are actually listening on their declared port, and writes a fresh
 /// entry into services.toml for each one that is. Useful after services.toml
 /// is wiped or after processes started outside epm.
@@ -17,15 +17,14 @@ pub fn run() -> Result<()> {
     let registry = RegistryFile::load()?;
 
     if registry.services.is_empty() {
-        println!("~/.epc/registry.toml is empty — nothing to sync.");
+        println!("~/.epm/services/registry.toml is empty — nothing to sync.");
         println!("Run `epm services start` inside a project directory to register a service.");
         return Ok(());
     }
 
     let mut services = ServicesFile::load()?;
-    let log_base = dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join(".epc")
+    let log_base = crate::services::state::services_state_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
         .join("logs");
 
     let mut synced = 0usize;

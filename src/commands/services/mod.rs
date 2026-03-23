@@ -47,7 +47,7 @@ pub enum ServicesCommands {
     /// Remove all services whose project directory no longer exists
     Prune,
     /// Repair services.toml from the persistent registry.
-    /// Re-registers any service in ~/.epc/registry.toml that is currently
+    /// Re-registers any service in ~/.epm/services/registry.toml that is currently
     /// running (port listening) but missing from services.toml.
     Sync,
     /// Stop and restart a running service (picks up source changes)

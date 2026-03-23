@@ -52,7 +52,7 @@ mod tests {
             port: 9000,
             pid,
             started: "2026-02-28T00:00:00Z".to_string(),
-            log_file: "/tmp/.epc/logs/pkg.log".to_string(),
+            log_file: "/tmp/.epm/services/logs/pkg.log".to_string(),
         }
     }
 

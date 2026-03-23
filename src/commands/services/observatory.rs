@@ -3,8 +3,7 @@ use rusqlite::Connection;
 use std::path::PathBuf;
 
 fn db_path() -> Result<PathBuf> {
-    let home = dirs::home_dir().context("could not determine home directory")?;
-    Ok(home.join(".epc/observatory.db"))
+    Ok(crate::services::state::services_state_dir()?.join("observatory.db"))
 }
 
 pub fn run(names: &[String]) -> Result<()> {

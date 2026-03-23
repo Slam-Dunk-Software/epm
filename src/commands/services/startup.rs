@@ -8,7 +8,7 @@ pub async fn run() -> Result<()> {
     let registry = RegistryFile::load()?;
 
     if registry.services.is_empty() {
-        println!("No services in ~/.epc/registry.toml. Nothing to start.");
+        println!("No services in ~/.epm/services/registry.toml. Nothing to start.");
         println!("Run `epm services start` inside a project directory to register a service.");
         return Ok(());
     }

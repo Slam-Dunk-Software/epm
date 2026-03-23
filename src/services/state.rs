@@ -4,7 +4,30 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-/// In-memory representation of ~/.epc/services.toml
+// ── State directory ────────────────────────────────────────────────────────────
+
+/// Returns `~/.epm/services/` — the epm services state directory.
+///
+/// On first call, if the old `~/.epc/` directory exists and the new one does
+/// not, it is migrated automatically (renamed). This is a one-time migration
+/// from the legacy path that predates the epc→epm services rename.
+pub fn services_state_dir() -> Result<PathBuf> {
+    let home = dirs::home_dir().context("could not determine home directory")?;
+    let old_dir = home.join(".epc");
+    let new_dir = home.join(".epm").join("services");
+
+    if old_dir.exists() && !new_dir.exists() {
+        if let Some(parent) = new_dir.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::rename(&old_dir, &new_dir)
+            .with_context(|| format!("failed to migrate {} to {}", old_dir.display(), new_dir.display()))?;
+    }
+
+    Ok(new_dir)
+}
+
+/// In-memory representation of ~/.epm/services/services.toml
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ServicesFile {
     #[serde(skip)]
@@ -27,13 +50,10 @@ pub struct ServiceEntry {
 
 impl ServicesFile {
     pub fn default_path() -> Result<PathBuf> {
-        Ok(dirs::home_dir()
-            .context("could not determine home directory")?
-            .join(".epc")
-            .join("services.toml"))
+        Ok(services_state_dir()?.join("services.toml"))
     }
 
-    /// Load from the default location (~/.epc/services.toml).
+    /// Load from the default location (~/.epm/services/services.toml).
     pub fn load() -> Result<Self> {
         Self::load_from(&Self::default_path()?)
     }
@@ -123,7 +143,7 @@ impl ServicesFile {
 
 // ── RegistryFile ──────────────────────────────────────────────────────────────
 //
-// ~/.epc/registry.toml — a persistent record of every EPS project directory
+// ~/.epm/services/registry.toml — a persistent record of every EPS project directory
 // ever handed to `epm services start`. Unlike services.toml (which is live
 // state that gets wiped or repaired frequently), registry.toml is append-only:
 // entries are only removed when the user explicitly asks (remove / prune).
@@ -144,10 +164,7 @@ pub struct RegistryEntry {
 
 impl RegistryFile {
     pub fn default_path() -> Result<PathBuf> {
-        Ok(dirs::home_dir()
-            .context("could not determine home directory")?
-            .join(".epc")
-            .join("registry.toml"))
+        Ok(services_state_dir()?.join("registry.toml"))
     }
 
     pub fn load() -> Result<Self> {
@@ -210,7 +227,7 @@ mod tests {
             port: 9000,
             pid: 99999,
             started: "2026-02-28T00:00:00Z".to_string(),
-            log_file: "/tmp/.epc/logs/my_pkg.log".to_string(),
+            log_file: "/tmp/.epm/services/logs/my_pkg.log".to_string(),
         }
     }
 

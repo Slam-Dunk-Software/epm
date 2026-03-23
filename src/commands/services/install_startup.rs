@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 pub fn run() -> Result<()> {
     let home = dirs::home_dir().context("could not determine home directory")?;
     let epm_path = std::env::current_exe().context("could not determine epm binary path")?;
-    let log_path = home.join(".epc").join("logs").join("startup.log");
+    let log_path = crate::services::state::services_state_dir()?.join("logs").join("startup.log");
 
     #[cfg(target_os = "macos")]
     return run_macos(&home, &epm_path, &log_path);

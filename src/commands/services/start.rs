@@ -117,10 +117,7 @@ pub async fn run(spec: Option<&str>, local: Option<&Path>) -> Result<()> {
         svc.port
     };
 
-    let log_dir = dirs::home_dir()
-        .context("could not determine home directory")?
-        .join(".epc")
-        .join("logs");
+    let log_dir = crate::services::state::services_state_dir()?.join("logs");
     std::fs::create_dir_all(&log_dir)?;
     let log_path = log_dir.join(format!("{name}.log"));
     let log_file = File::create(&log_path)

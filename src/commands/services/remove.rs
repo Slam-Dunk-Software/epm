@@ -14,9 +14,7 @@ pub fn run(name: &str) -> Result<()> {
 }
 
 fn observatory_db_path() -> Result<std::path::PathBuf> {
-    Ok(dirs::home_dir()
-        .ok_or_else(|| anyhow::anyhow!("could not determine home directory"))?
-        .join(".epc/observatory.db"))
+    Ok(crate::services::state::services_state_dir()?.join("observatory.db"))
 }
 
 pub fn run_with_paths(name: &str, state_path: &Path, db_path: &Path) -> Result<()> {

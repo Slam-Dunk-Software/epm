@@ -2,8 +2,8 @@
 //!
 //! Reads `~/.epm/installed.toml` to know exactly what to clean up:
 //! - Deletes tracked skill files from `~/.claude/commands/`
-//! - Removes `~/.epm/`
-//! - Removes `~/.epc/` (services state directory)
+//! - Removes `~/.epm/` (includes `~/.epm/services/` state directory)
+//! - Removes `~/.epc/` if it still exists (pre-migration legacy path)
 //! - Removes the epm-startup LaunchAgent / systemd unit (and old epc-startup if present)
 //! - Removes the epm binary itself (unless `--keep-binary` is passed)
 
@@ -46,7 +46,7 @@ pub fn run(yes: bool, keep_binary: bool) -> Result<()> {
             .with_context(|| format!("could not remove {}", epm_dir.display()))?;
     }
 
-    // ── remove ~/.epc/ state directory ───────────────────────────────────────
+    // ── remove ~/.epc/ if it still exists (pre-migration legacy path) ────────
     let epc_dir = home.join(".epc");
     let removed_epc_dir = if epc_dir.exists() {
         std::fs::remove_dir_all(&epc_dir).is_ok()
