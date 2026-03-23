@@ -118,7 +118,7 @@ echo ""
 
 # Docs + skills — only useful if the user has Claude Code
 printf "  ${BOLD}eps_docs + eps_skills${RESET} — EPS knowledge as Claude Code slash commands.\n"
-printf "  Adds ${CYAN}/eps${RESET}, ${CYAN}/eps-adr${RESET}, ${CYAN}/eps-toml${RESET}, ${CYAN}/eps-epc${RESET} and more.\n"
+printf "  Adds ${CYAN}/eps${RESET}, ${CYAN}/eps-adr${RESET}, ${CYAN}/eps-toml${RESET}, ${CYAN}/eps-dev${RESET}, and more.\n"
 if prompt "  Using Claude Code? Install eps_docs + eps_skills?"; then
   echo ""
   epm install eps_docs

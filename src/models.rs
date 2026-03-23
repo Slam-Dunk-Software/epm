@@ -95,7 +95,7 @@ pub struct EpsSkills {
 pub struct EpsSection {
     pub customization_guide: Option<String>,
     /// `"tool"` = maintained software, not a customizable harness.
-    /// `epm new` blocks on tool packages; use `epm install` or `epm mcp install` instead.
+    /// `epm new` blocks on tool packages; use `epm install` instead.
     #[serde(default, rename = "type")]
     pub package_type: Option<String>,
 }
