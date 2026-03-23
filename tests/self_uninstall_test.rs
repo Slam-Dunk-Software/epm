@@ -1,6 +1,5 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
-use serde_json::json;
 use std::fs;
 use tempfile::TempDir;
 
@@ -34,16 +33,6 @@ fn setup_fake_epc_binary(home: &TempDir) -> std::path::PathBuf {
     bin_dir
 }
 
-fn write_claude_json(home: &TempDir, content: &serde_json::Value) {
-    let path = home.path().join(".claude.json");
-    fs::write(path, serde_json::to_string_pretty(content).unwrap()).unwrap();
-}
-
-fn read_claude_json(home: &TempDir) -> serde_json::Value {
-    let raw = fs::read_to_string(home.path().join(".claude.json")).unwrap();
-    serde_json::from_str(&raw).unwrap()
-}
-
 fn write_installed_toml(home: &TempDir, content: &str) {
     let dir = home.path().join(".epm");
     fs::create_dir_all(&dir).unwrap();
@@ -51,55 +40,6 @@ fn write_installed_toml(home: &TempDir, content: &str) {
 }
 
 // ── self-uninstall ────────────────────────────────────────────────────────────
-
-#[test]
-fn self_uninstall_removes_tracked_mcp_from_claude_json() {
-    let home = TempDir::new().unwrap();
-
-    write_installed_toml(&home, r#"
-[[mcp]]
-name   = "eps_mcp"
-binary = "/fake/bin/eps_mcp"
-"#);
-    write_claude_json(&home, &json!({
-        "mcpServers": {
-            "eps_mcp": { "command": "/fake/bin/eps_mcp", "args": [], "env": {} }
-        }
-    }));
-
-    epm(&["self-uninstall", "--yes", "--keep-binary"], &home).success();
-
-    let val = read_claude_json(&home);
-    assert!(
-        val["mcpServers"].get("eps_mcp").is_none(),
-        "eps_mcp should have been removed from ~/.claude.json"
-    );
-}
-
-#[test]
-fn self_uninstall_leaves_untracked_mcp_intact() {
-    let home = TempDir::new().unwrap();
-
-    write_installed_toml(&home, r#"
-[[mcp]]
-name   = "eps_mcp"
-binary = "/fake/bin/eps_mcp"
-"#);
-    write_claude_json(&home, &json!({
-        "mcpServers": {
-            "eps_mcp":    { "command": "/fake/bin/eps_mcp",  "args": [], "env": {} },
-            "manual_mcp": { "command": "/fake/bin/manual",   "args": [], "env": {} }
-        }
-    }));
-
-    epm(&["self-uninstall", "--yes", "--keep-binary"], &home).success();
-
-    let val = read_claude_json(&home);
-    assert!(
-        val["mcpServers"].get("manual_mcp").is_some(),
-        "manually registered MCP should remain"
-    );
-}
 
 #[test]
 fn self_uninstall_removes_tracked_skill_files() {
@@ -174,19 +114,10 @@ fn self_uninstall_prints_what_was_removed() {
     let semver_path = commands_dir.join("semver-bump.md").to_string_lossy().to_string();
 
     write_installed_toml(&home, &format!(r#"
-[[mcp]]
-name   = "eps_mcp"
-binary = "/fake/bin/eps_mcp"
-
 [[skills]]
 name  = "eps_skills"
 files = ["{semver_path}"]
 "#));
-    write_claude_json(&home, &json!({
-        "mcpServers": {
-            "eps_mcp": { "command": "/fake/bin/eps_mcp", "args": [], "env": {} }
-        }
-    }));
 
     let out = epm(&["self-uninstall", "--yes", "--keep-binary"], &home)
         .success()
@@ -195,7 +126,6 @@ files = ["{semver_path}"]
         .clone();
     let stdout = String::from_utf8(out).unwrap();
 
-    assert!(stdout.contains("eps_mcp"), "should mention removed MCP");
     assert!(stdout.contains("eps_skills"), "should mention removed skills");
 }
 

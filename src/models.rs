@@ -20,8 +20,6 @@ pub struct EpsManifest {
     pub service: Option<EpsService>,
     #[serde(default)]
     pub skills: EpsSkills,
-    #[serde(default)]
-    pub mcp: EpsMcp,
 }
 
 impl EpsManifest {
@@ -150,25 +148,6 @@ pub struct EpsServiceConfig {
     pub start: String,
     pub port: u16,
     pub health_check: Option<String>,
-}
-
-/// Optional `[mcp]` section — present when the package is an MCP server.
-#[derive(Debug, Deserialize, Default)]
-pub struct EpsMcp {
-    /// Name of the compiled binary inside `target/release/`
-    pub binary: Option<String>,
-    /// Optional extra CLI args to pass when registering with the MCP client
-    #[serde(default)]
-    pub args: Vec<String>,
-    /// Static env vars written directly to the MCP client config (values known at publish time)
-    #[serde(default)]
-    pub env: std::collections::HashMap<String, String>,
-    /// Env vars that require user input at install time.
-    /// Key = env var name, value = human-readable prompt shown to the user.
-    /// `epm mcp install` will interactively prompt for each key and write the
-    /// answers into the MCP client config alongside any static `env` entries.
-    #[serde(default)]
-    pub env_prompts: std::collections::HashMap<String, String>,
 }
 
 /// Sent to POST /api/v1/packages
@@ -433,76 +412,6 @@ uninstall = "scripts/uninstall.sh"
         assert_eq!(m.hooks.configure, Some("scripts/configure.sh".to_string()));
         assert_eq!(m.hooks.update,    Some("scripts/update.sh".to_string()));
         assert_eq!(m.hooks.uninstall, Some("scripts/uninstall.sh".to_string()));
-    }
-
-    // --- EpsMcp / env_prompts ---
-
-    #[test]
-    fn eps_mcp_env_prompts_defaults_to_empty_when_absent() {
-        let toml = r#"
-[package]
-name        = "mypkg"
-version     = "0.1.0"
-description = "Test"
-authors     = ["nick"]
-license     = "MIT"
-repository  = "https://github.com/nick/mypkg"
-
-[mcp]
-binary = "mypkg"
-"#;
-        let m: EpsManifest = toml::from_str(toml).unwrap();
-        assert!(m.mcp.env_prompts.is_empty());
-    }
-
-    #[test]
-    fn eps_mcp_env_prompts_parses_table() {
-        let toml = r#"
-[package]
-name        = "eps_mcp"
-version     = "0.1.0"
-description = "MCP server"
-authors     = ["nick"]
-license     = "MIT"
-repository  = "https://github.com/nick/eps_mcp"
-
-[mcp]
-binary = "eps_mcp"
-
-[mcp.env_prompts]
-EPC_DOCS_PATH = "Path to your local epc docs/ directory"
-"#;
-        let m: EpsManifest = toml::from_str(toml).unwrap();
-        assert_eq!(m.mcp.env_prompts.len(), 1);
-        assert_eq!(
-            m.mcp.env_prompts["EPC_DOCS_PATH"],
-            "Path to your local epc docs/ directory"
-        );
-    }
-
-    #[test]
-    fn eps_mcp_env_prompts_and_static_env_coexist() {
-        let toml = r#"
-[package]
-name        = "mypkg"
-version     = "0.1.0"
-description = "Test"
-authors     = ["nick"]
-license     = "MIT"
-repository  = "https://github.com/nick/mypkg"
-
-[mcp]
-binary = "mypkg"
-
-[mcp.env]
-STATIC_KEY = "static_value"
-
-[mcp.env_prompts]
-PROMPTED_KEY = "Describe this setting"
-"#;
-        let m: EpsManifest = toml::from_str(toml).unwrap();
-        assert_eq!(m.mcp.env["STATIC_KEY"], "static_value");
-        assert_eq!(m.mcp.env_prompts["PROMPTED_KEY"], "Describe this setting");
     }
 
     // --- Package ---

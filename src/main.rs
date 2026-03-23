@@ -10,7 +10,6 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use client::RegistryClient;
-use commands::mcp::McpCommands;
 use commands::services::ServicesCommands;
 use commands::skills::SkillsCommands;
 
@@ -114,11 +113,6 @@ enum Commands {
         #[command(subcommand)]
         command: ServicesCommands,
     },
-    /// Install, list, and remove MCP servers in ~/.claude.json
-    Mcp {
-        #[command(subcommand)]
-        command: McpCommands,
-    },
     /// Install, list, and remove Claude Code skill packages
     Skills {
         #[command(subcommand)]
@@ -126,7 +120,7 @@ enum Commands {
     },
     /// Update epm to the latest version
     SelfUpdate,
-    /// Remove epm and everything it installed (MCP servers, skills, packages)
+    /// Remove epm and everything it installed (skills, packages)
     SelfUninstall {
         /// Skip confirmation prompt
         #[arg(long)]
@@ -192,9 +186,6 @@ async fn main() -> Result<()> {
         }
         Commands::Services { command } => {
             commands::services::run(command).await?;
-        }
-        Commands::Mcp { command } => {
-            commands::mcp::run(command, &client).await?;
         }
         Commands::Skills { command } => {
             commands::skills::run(command, &client).await?;

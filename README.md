@@ -57,14 +57,6 @@ epm services audit                  # check services for insecure network bindin
 epm services observatory rm <name>  # remove a stale entry from the Observatory database
 ```
 
-### MCP servers
-
-```sh
-epm mcp install eps_mcp     # install + register an MCP server with Claude
-epm mcp list                # list registered MCP servers
-epm mcp remove eps_mcp      # unregister + uninstall
-```
-
 ### Skills (Claude Code slash commands)
 
 ```sh

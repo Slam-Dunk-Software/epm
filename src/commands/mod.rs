@@ -4,7 +4,6 @@ pub mod login;
 pub mod open;
 pub mod self_uninstall;
 pub mod self_update;
-pub mod mcp;
 pub mod skills;
 pub mod new;
 pub mod info;

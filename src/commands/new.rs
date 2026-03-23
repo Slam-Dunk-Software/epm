@@ -94,11 +94,7 @@ pub async fn run(client: &RegistryClient, spec: &str, dir: Option<&str>, force: 
             if let Ok(m) = toml::from_str::<EpsManifest>(&s) {
                 if m.eps.package_type.as_deref() == Some("tool") {
                     std::fs::remove_dir_all(&dest_path).ok();
-                    let alt = if m.mcp.binary.is_some() {
-                        format!("epm mcp install {name}")
-                    } else {
-                        format!("epm install {name}")
-                    };
+                    let alt = format!("epm install {name}");
                     bail!(
                         "'{name}' is a maintained tool, not a customizable harness.\n\
                          Use `{alt}` to install it instead.\n\

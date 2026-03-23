@@ -12,15 +12,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct InstalledManifest {
     #[serde(default)]
-    pub mcp: Vec<InstalledMcp>,
-    #[serde(default)]
     pub skills: Vec<InstalledSkillPkg>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InstalledMcp {
-    pub name: String,
-    pub binary: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,18 +50,6 @@ impl InstalledManifest {
 
     // ── mutations ─────────────────────────────────────────────────────────────
 
-    pub fn add_mcp(&mut self, name: &str, binary: &str) {
-        self.mcp.retain(|m| m.name != name);
-        self.mcp.push(InstalledMcp {
-            name: name.to_string(),
-            binary: binary.to_string(),
-        });
-    }
-
-    pub fn remove_mcp(&mut self, name: &str) {
-        self.mcp.retain(|m| m.name != name);
-    }
-
     pub fn add_skills(&mut self, name: &str, files: Vec<String>) {
         self.skills.retain(|s| s.name != name);
         self.skills.push(InstalledSkillPkg {
@@ -102,21 +82,7 @@ mod tests {
     fn load_returns_empty_when_file_missing() {
         let h = home();
         let m = InstalledManifest::load(h.path());
-        assert!(m.mcp.is_empty());
         assert!(m.skills.is_empty());
-    }
-
-    #[test]
-    fn save_and_load_roundtrip_mcp() {
-        let h = home();
-        let mut m = InstalledManifest::default();
-        m.add_mcp("eps_mcp", "/path/to/eps_mcp");
-        m.save(h.path()).unwrap();
-
-        let loaded = InstalledManifest::load(h.path());
-        assert_eq!(loaded.mcp.len(), 1);
-        assert_eq!(loaded.mcp[0].name, "eps_mcp");
-        assert_eq!(loaded.mcp[0].binary, "/path/to/eps_mcp");
     }
 
     #[test]
@@ -136,44 +102,6 @@ mod tests {
         assert_eq!(loaded.skills.len(), 1);
         assert_eq!(loaded.skills[0].name, "eps_skills");
         assert_eq!(loaded.skills[0].files.len(), 2);
-    }
-
-    #[test]
-    fn add_mcp_replaces_existing_entry() {
-        let h = home();
-        let mut m = InstalledManifest::default();
-        m.add_mcp("eps_mcp", "/old/path");
-        m.add_mcp("eps_mcp", "/new/path");
-        m.save(h.path()).unwrap();
-
-        let loaded = InstalledManifest::load(h.path());
-        assert_eq!(loaded.mcp.len(), 1);
-        assert_eq!(loaded.mcp[0].binary, "/new/path");
-    }
-
-    #[test]
-    fn remove_mcp_removes_by_name() {
-        let h = home();
-        let mut m = InstalledManifest::default();
-        m.add_mcp("eps_mcp", "/bin/eps_mcp");
-        m.add_mcp("other_mcp", "/bin/other");
-        m.remove_mcp("eps_mcp");
-        m.save(h.path()).unwrap();
-
-        let loaded = InstalledManifest::load(h.path());
-        assert_eq!(loaded.mcp.len(), 1);
-        assert_eq!(loaded.mcp[0].name, "other_mcp");
-    }
-
-    #[test]
-    fn remove_mcp_is_noop_when_not_present() {
-        let h = home();
-        let mut m = InstalledManifest::default();
-        m.remove_mcp("nonexistent");
-        m.save(h.path()).unwrap();
-
-        let loaded = InstalledManifest::load(h.path());
-        assert!(loaded.mcp.is_empty());
     }
 
     #[test]
@@ -207,7 +135,7 @@ mod tests {
     fn save_creates_epm_dir_if_missing() {
         let h = home();
         let mut m = InstalledManifest::default();
-        m.add_mcp("x", "/bin/x");
+        m.add_skills("x", vec!["/bin/x.md".to_string()]);
         m.save(h.path()).unwrap();
         assert!(h.path().join(".epm").join("installed.toml").exists());
     }
@@ -218,6 +146,6 @@ mod tests {
         std::fs::create_dir_all(h.path().join(".epm")).unwrap();
         std::fs::write(h.path().join(".epm").join("installed.toml"), "NOT TOML ][[[").unwrap();
         let m = InstalledManifest::load(h.path());
-        assert!(m.mcp.is_empty());
+        assert!(m.skills.is_empty());
     }
 }
